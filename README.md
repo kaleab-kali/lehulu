@@ -1,112 +1,155 @@
-# Lehulu (ለሁሉ) — accessible sign-up, profile and job applications for Savanna
+# Lehulu
 
-> Digital Bridge Accessibility Hackathon 2026 · **Track 1: Accessible onboarding** (registration, profile and Career Gateway)
->
-> Team: _[team name]_ · Members: _[names]_ · Co-designer: _[first name, with consent]_ · Sign language: _[interpreter, with consent]_
+Accessible sign-up, profile and job-application component for ALX Savanna and other learning or job platforms.
 
-Lehulu is a drop-in sign-up and profile component. After choosing a language, the learner is asked **how they use their phone** (listen with a screen reader, speak, pictures and audio, big and simple, sign language, save data), never what their disability is. The rest of the sign-up adapts to that answer, and the same answer sets up the private job filter and the support request an employer receives.
+A learner signs up one question at a time, by typing or by voice, without needing an ID document, and then
+applies for jobs. Instead of asking about disability, Lehulu asks how the learner uses their phone (screen
+reader, voice, pictures, large text, sign language, low data) and adapts the screens to that answer.
 
-- **Live demo (phone friendly, nothing to install):** _[https://<github-user>.github.io/<repo>/]_
-- **Conformance report:** [docs/CONFORMANCE.md](docs/CONFORMANCE.md) · **Architecture:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · **Feature status:** [docs/FEATURES.md](docs/FEATURES.md)
+- **Web component:** TypeScript, Lit 3, Vite 5 (`web/`)
+- **API:** Rust, axum 0.8, sqlx + SQLite, OpenAPI via utoipa (`server/`)
+- **Question flows:** JSON shared by web and server (`flows/`)
+- **Tests:** Vitest, Playwright + axe-core, `cargo test`
 
----
+## Requirements
 
-## For testers: the main task (5–10 minutes)
-
-The hackathon site does not define Track 1's main task, so this is the task we ask testers to complete **unaided**:
-
-1. Open the demo. Choose a language, then choose how you use your phone (for example “I listen”).
-2. Sign up **without a kebele ID**: at the ID question choose **“No document. A partner can vouch for me”** and pick a partner.
-3. Check the support that was pre-ticked for you (for example “Screen-reader-friendly tests”). No proof is asked for.
-4. Check your answers and create your account.
-5. Open **Find jobs**. Jobs offering your support come first. Open one and **apply** by typing or by voice.
-6. Choose whether to share your support needs with that employer.
-
-**Done when** the screen says “Application sent”, and you never had to type the same thing twice, show an ID or race a timer.
-
-Optional:
-- Leave halfway with **Continue later**, then reload the page: your answers come back.
-- Open the **Partner** page and confirm the learner (the ID status changes to “confirmed by your partner”).
-- Open the **Employer** page, post a job with the support it offers, and see applications received.
-
-| Condition we test | How |
+| To run | You need |
 |---|---|
-| TalkBack + Chrome (Android) | Swipe right through each screen, double-tap to activate |
-| NVDA + Chrome or Firefox (Windows) | Tab, H (headings), F (form fields) |
-| Keyboard only | Tab, Shift+Tab, Space, Enter, arrow keys inside radio groups |
-| 200% zoom and 400% reflow | Browser zoom; at 320 px wide there is no sideways scrolling |
-| Sound off | Every audio prompt and sign video has the same text on screen |
+| Full stack in Docker | Docker 24+ with Compose v2 |
+| Web only (demo mode, no server) | Node 22+ with pnpm (`corepack enable pnpm`) |
+| Web + API locally | The above, plus Rust 1.80+ |
 
----
+No API keys or outside services. Everything runs offline after the first install.
 
-## Two ways to run it
-
-| | **Live demo** | **Docker Compose** |
-|---|---|---|
-| For | Co-designers and anyone on a phone | Judges and tech teams |
-| How | Open the link above | `docker compose up --build` |
-| What runs | The web component in **demo mode** | Web component + Rust API + SQLite |
-| Where data goes | Only **your browser** (a note on screen says so) | SQLite database in a Docker volume |
-| API docs | — | http://localhost:8080/docs |
-
-Both run the **same component code**. Only the data layer differs (`web/src/data/store.ts`: `LocalStore` or `ApiStore`), chosen at build time with `VITE_DATA_MODE`.
-
-## Install in under an hour (judges)
-
-Requirements: Docker 24+ with Compose v2, about 2 GB disk. **No API keys. No internet needed after the first build.**
+## Quick start (Docker)
 
 ```bash
-git clone _[repo url]_ lehulu && cd lehulu
-docker compose up --build        # first build about 5–10 minutes
+git clone https://github.com/kaleab-kali/lehulu.git
+cd lehulu
+docker compose up --build
 ```
 
-| URL | What it is |
-|---|---|
-| http://localhost:8080/ | Demo host page with Lehulu added by one tag (Level 1) |
-| http://localhost:8080/jobs/ | Job list with the private support filter, and My profile |
-| http://localhost:8080/partner/ | Partner screen (for example AAAPD) to confirm learners without ID |
-| http://localhost:8080/employer/ | Employer form (job + support offered) and applications received |
-| http://localhost:8080/embed/?flow=signup&lang=am | Iframe version for platforms that block scripts |
-| http://localhost:8080/docs | Interactive API docs (Level 2, OpenAPI) · spec at `/openapi.json` |
-| http://localhost:8080/dev/sms | SMS simulator: “continue later” messages |
-| http://localhost:8080/savanna/ | Real Savanna starter pages with Lehulu inside (after `scripts/import-savanna-starter.sh`) |
-
-Seed data: 4 jobs and 4 partners (AAAPD, Tomorrow is Better, a refugee agency, a school).
+Open http://localhost:8080. The first build takes 5–10 minutes. Data is stored in the `lehulu-data` volume.
 
 ```bash
-docker compose --profile test run --rm test   # Playwright + axe against the running stack
-docker compose down -v                        # stop and delete all data
+docker compose down -v      # stop and delete all data
+PORT=8090 docker compose up # if port 8080 is taken
 ```
 
-**Testing on a phone against a laptop:** the microphone only works on `localhost` or HTTPS. Use the live demo, or connect the phone by USB, open `chrome://inspect` on the laptop, forward port `8080`, then open `localhost:8080` on the phone.
+## Local development
 
-| Problem | Fix |
-|---|---|
-| Port 8080 in use | `PORT=8090 docker compose up` |
-| Mic button says the microphone is not available | You opened an `http://192.168…` address: use the live demo or port forwarding |
+Install once:
 
-### Without Docker (developers)
 ```bash
-cd server && cargo run                                  # API on :8080 (needs Rust 1.80+)
-cd web && pnpm install && pnpm dev:api                  # UI on :5173, API calls forwarded to :8080
-# or, with no server at all:
-cd web && pnpm dev
+cd web
+pnpm install
+pnpm exec playwright install chromium   # only needed for end-to-end tests
 ```
 
-### Live demo deployment
-GitHub Pages: repo **Settings → Pages → Source: GitHub Actions**, then push to `main` (`.github/workflows/pages.yml` runs the accessibility tests first and refuses to publish if they fail).
-Vercel instead: root directory `web`, install command `pnpm install`, build command `pnpm run build:demo`, output `dist`.
+**Demo mode** (no server; data stays in the browser):
 
----
+```bash
+cd web
+pnpm dev                 # http://localhost:5173
+```
 
-## Adding Lehulu to another platform
+**Against the Rust API** (two terminals):
 
-| Way | For | Code |
-|---|---|---|
-| **Script tag** (Level 1) | Savanna, WordPress, any page you control | see below |
-| **Iframe** | LMSs and job portals that block scripts (Moodle, Canvas, most portals) | `<iframe src="https://HOST/embed/?flow=signup&lang=am" title="Lehulu sign-up" allow="microphone" style="width:100%;min-height:640px;border:0"></iframe>` |
-| **REST API** (Level 2) | Platforms with their own app or Telegram bot | `GET /v1/flows/signup` gives the questions; `POST /v1/learners` saves |
-| **schema.org JobPosting** (Level 3) | Job boards importing job feeds | `GET /v1/jobs` with `Accept: application/ld+json` |
+```bash
+cd server
+cargo run                # API on http://127.0.0.1:8080, creates server/data/lehulu.db
+```
+
+```bash
+cd web
+pnpm dev:api             # http://localhost:5173, /v1 is proxied to :8080
+```
+
+To serve the built pages from the Rust server itself (as Docker does): `cd web && pnpm run build`, then
+open http://127.0.0.1:8080.
+
+## Tests
+
+| What | Command |
+|---|---|
+| Type check | `cd web && pnpm typecheck` |
+| Web unit tests | `cd web && pnpm test` |
+| End-to-end + accessibility (demo mode) | `cd web && pnpm exec playwright test` |
+| End-to-end against a running server | `cd web && BASE_URL=http://localhost:8080 pnpm exec playwright test` |
+| Rust tests | `cd server && cargo test` |
+| Rust lint | `cd server && cargo fmt --check && cargo clippy --all-targets -- -D warnings` |
+| Against the Docker stack | `docker compose --profile test run --rm test` |
+
+On Windows PowerShell, set the variable first: `$env:BASE_URL="http://localhost:8080"; pnpm exec playwright test`.
+
+The end-to-end suite completes every screen with the keyboard only, runs axe on each screen and fails on any
+serious or critical issue. It runs on a desktop and a phone viewport. CI (`.github/workflows/ci.yml`) runs
+all of the above on every push.
+
+## Using it, step by step
+
+Start the app (Docker or local), then follow these steps.
+
+### 1. Sign up as a learner (http://localhost:8080/)
+
+1. Choose **English** or **አማርኛ**, then **Next**.
+2. **How do you use your phone?** Tick one or more, for example **I listen (screen reader)** and
+   **Pictures and audio**. The next screens change straight away (picture tiles, a large voice button).
+3. **Name:** type it, or press **Answer by voice**, speak, then **Stop recording**. You can then
+   **Play my recording**, **Record again** or **Delete recording**.
+4. **Phone:** try `123` first to see the error message, then `0911 234 567`.
+5. **Date of birth:** Ethiopian calendar (day, month, year). The Gregorian date is shown below.
+6. **ID:** choose **No document. A partner can vouch for me**, then **AAAPD**. No ID is ever required.
+7. **Support:** already ticked from step 2. Change it if you like. No proof is asked for.
+8. **Check your answers:** each answer has **Change**, and spoken answers have **Play recording**.
+   Press **Create my account**.
+
+You can stop at any point with **Continue later**. Reload the page and your answers come back.
+In Docker or API mode the "continue later" text message appears at http://localhost:8080/dev/sms.
+
+### 2. Find a job and apply (http://localhost:8080/jobs/)
+
+1. The support filter is pre-set from your sign-up. Jobs that offer more of your support come first,
+   with matching support marked ✓. The filter runs in the browser; your needs are not sent to the server.
+2. Open a job title, answer **Why do you want this job?** by typing or by voice.
+3. Choose whether to share your support needs with **this employer only**.
+4. **Send application**.
+
+**My profile** on the same page shows your answers and lets you delete your account (and recordings).
+
+### 3. See it as the employer (http://localhost:8080/employer/)
+
+- **Applications received:** pick the job. You see the answer (text or a player for the voice answer) and,
+  only if the learner agreed, their support requests in plain words. No diagnosis is ever shown.
+- **Post a job:** fill in title, organisation, city (optional) and the support the job offers.
+  It appears in the learner's job list.
+
+### 4. Confirm a learner as a partner (http://localhost:8080/partner/)
+
+Choose **AAAPD**, find the learner from step 1 (you can play their spoken name) and press
+**I know this person, confirm**. Their ID status becomes "confirmed by partner".
+
+### 5. Inside Savanna
+
+```bash
+bash scripts/import-savanna-starter.sh   # downloads the ALX Savanna starter pages into web/public/savanna/
+cd web && pnpm run build
+```
+
+Open http://localhost:8080/savanna/ (or `/savanna/pages/homepage-v1-paced.html`). Lehulu appears below
+Savanna's course bar in Savanna's colours. The end-to-end suite also tests this page when it exists.
+
+### Other pages
+
+| URL | What |
+|---|---|
+| `/docs` | Swagger UI for the API (spec at `/openapi.json`) |
+| `/embed/?flow=signup&lang=am` | Iframe version (`flow` = `signup`, `apply`, `employer`, `jobs`) |
+| `/dev/sms` | SMS simulator |
+
+## Adding Lehulu to another site
+
+**Script tag:**
 
 ```html
 <script type="module" src="https://YOUR-LEHULU-HOST/lehulu.js"></script>
@@ -115,76 +158,84 @@ Vercel instead: root directory `web`, install command `pnpm install`, build comm
 
 | Element | Attributes |
 |---|---|
-| `<lehulu-signup>` | `flow` = `signup` (default) · `apply` · `employer`; `lang` = `am` · `en`; `job-id` (with `apply`); `jobs-url`; `profile-url` |
+| `<lehulu-signup>` | `flow` (`signup` · `apply` · `employer`), `lang` (`am` · `en`), `job-id` (with `apply`), `jobs-url`, `profile-url`, `theme` (`light` · `dark`) |
 | `<lehulu-jobs>` | `lang` |
-| `<lehulu-profile>`, `<lehulu-partner>`, `<lehulu-applications>` | — |
+| `<lehulu-profile>`, `<lehulu-partner>`, `<lehulu-applications>` | none |
 
-Events (bubble out of the component):
-| Event | `detail` |
-|---|---|
-| `lehulu:signup-complete` | `{ learnerId, idStatus }` |
-| `lehulu:preferences` | `{ language, accessPreferences }`, so the host can adapt (the demo page enlarges text for “big”) |
-| `lehulu:application-sent` | `{ jobId, supportShared }` |
-| `lehulu:job-posted` | `{ job }` |
-| `lehulu:start-lesson` | `{ learnerId }` |
+Events bubble out of the component: `lehulu:signup-complete` `{ learnerId, idStatus }`,
+`lehulu:preferences` `{ language, accessPreferences }`, `lehulu:application-sent` `{ jobId, supportShared }`,
+`lehulu:job-posted` `{ job }`, `lehulu:start-lesson` `{ learnerId }`.
 
-Theming: CSS custom properties `--lehulu-accent`, `--lehulu-soft`, `--lehulu-font`, `--lehulu-radius`, `--lehulu-scroll-offset` (height of a fixed header); `theme="light"` or `theme="dark"` on any element to stop it following the device (Savanna uses `theme="light"`). Styles are isolated in shadow DOM. `lehulu.js` is about 25 KB gzipped; fonts load separately.
+Theming with CSS custom properties: `--lehulu-accent`, `--lehulu-soft`, `--lehulu-font`, `--lehulu-radius`,
+`--lehulu-scroll-offset` (height of a fixed header on the host page).
 
-API errors always look like this:
+**Iframe** (for sites that block scripts):
+
+```html
+<iframe src="https://YOUR-LEHULU-HOST/embed/?flow=signup&lang=am" title="Lehulu sign-up"
+        allow="microphone" style="width:100%;min-height:640px;border:0"></iframe>
+```
+
+**REST API:** see `/docs`. Main endpoints:
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/v1/flows/{id}` | Question flow JSON (`signup`, `apply`, `employer`, `needs`) |
+| POST · PUT · GET | `/v1/drafts`, `/v1/drafts/{code}` | Autosave and continue later |
+| POST | `/v1/learners` | Create an account |
+| GET · PATCH · DELETE | `/v1/learners/{id}` | Profile, edit, delete (with recordings) |
+| GET | `/v1/jobs` | Jobs; send `Accept: application/ld+json` for schema.org JobPosting |
+| POST | `/v1/jobs` | Post a job |
+| POST | `/v1/applications` | Apply (`why` text and/or `whyAudio`) |
+| GET | `/v1/jobs/{id}/applications` | Applications for a job |
+| POST · GET | `/v1/media`, `/v1/media/{id}` | Upload and play a voice answer |
+| GET · POST | `/v1/partners/{id}/vouches[/{learnerId}]` | Partner confirms a learner |
+
+Every error has the same shape:
+
 ```json
 { "error": { "code": "phone_invalid", "message": "Enter 10 digits that start with 09 or 07, for example 0911 234 567.", "field": "phone" } }
 ```
 
----
+## Configuration
 
-## Keyboard and screen reader support
+Server (environment variables; defaults work for local development, see `.env.example`):
 
-| Element | Keyboard | What a screen reader says (example) |
+| Variable | Default | Purpose |
 |---|---|---|
-| New question | Focus moves to the question heading | “Question 4 of 10. What is your phone number?, heading” |
-| Text field | Tab | “What is your phone number?, edit text. Example: 0911 234 567” |
-| Radio group (language, ID) | Arrow keys move, Space selects | “Refugee ID, radio button, 2 of 5” |
-| Checkbox group (support) | Tab between, Space toggles | “Extra time for tests, checkbox, checked” |
-| Error | Focus returns to the field | “Enter 10 digits that start with 09 or 07, for example 0911 234 567” |
-| Voice answer | Enter or Space on “Answer by voice”, again to stop | “Recording saved (4 seconds). It counts as your answer.” |
-| Job results | H jumps between job titles | “3 jobs offer all the support you need.” |
+| `BIND` | `127.0.0.1:8080` | Listen address (`0.0.0.0:8080` in Docker) |
+| `DATABASE_URL` | `sqlite://data/lehulu.db?mode=rwc` | SQLite file; migrations run on start |
+| `PUBLIC_DIR` | `../web/dist` | Built web files to serve |
+| `FLOWS_DIR` | `../flows` | Question flows |
+| `SEED_DIR` | `seed` | Jobs and partners loaded into an empty database |
+| `MEDIA_DIR` | `data/media` | Voice recordings |
+| `SMS_ADAPTER` | `simulator` | Messages shown at `/dev/sms` |
+| `PORT` | `8080` | Host port for Docker Compose |
 
-ARIA is used only where HTML has no native equivalent: `role="alert"` for errors, `role="status"` for saved, recording and result messages, `aria-describedby` to link hints and errors, `aria-invalid` on fields with errors. Amharic text carries `lang="am"`.
+Web (build time): `VITE_DATA_MODE` (`api` or `local`; set by `pnpm dev` / `pnpm dev:api` / `pnpm run build:demo`),
+`VITE_API_BASE` (API origin if different from the page), `VITE_BASE` (path prefix, e.g. for GitHub Pages).
 
-## Built for Ethiopia
-- Amharic and English throughout the sign-up, with Noto Sans Ethiopic bundled (Savanna loads no Ethiopic font)
-- Ethiopian calendar date of birth: three dropdowns, Pagume handled, the Gregorian date shown. Test: ኅዳር 5, 2019 = 14 Nov 2026
-- Ethiopian phone formats (09…, 07…, +251…)
-- Small download for 3G: `lehulu.js` about 25 KB gzipped
-- Recorded human Amharic audio prompts and human interpreter sign clips (no text-to-speech or avatar service)
+## Repository layout
 
-## Voice input: what is real
-- Every text question has a voice button. **The recording itself counts as the answer**, so voice works offline with no outside service.
-- Phone numbers: use the phone keyboard's own microphone or the number pad.
-- Speech-to-text is not built (Amharic accuracy is limited); it is an optional stretch goal and would always be editable.
-
-## Privacy (Proclamation No. 1321/2024)
-- Stored: name, phone, date of birth, language, how the learner uses their phone, support needs, ID **type** and optional number, partner confirmation.
-- Never stored: disability or diagnosis (there is no such field), medical documents, ID photos.
-- Support needs go to an employer **only** when the learner says yes for that job.
-- Consent log for sign-up, partner decisions and applications. Learners can delete their account.
-- No analytics or third-party scripts.
-
-## Tests
-```bash
-cd server && cargo test                 # API, validation, Ethiopian calendar
-cd web && pnpm test                      # flow engine, calendar, phone rules
-cd web && pnpm exec playwright test           # keyboard-only main task + axe on every screen, desktop and phone
 ```
-Latest result: _[date]_ — axe: 0 critical, 0 serious on _[n]_ screens.
+web/        components (src/components), flow engine (src/engine), data layer (src/data/store.ts), tests
+server/     Rust API: routes, domain rules, migrations, seed data
+flows/      signup.json, apply.json, employer.json, needs.json
+scripts/    import-savanna-starter.sh
+docs/       ARCHITECTURE.md, FEATURES.md (status), CONFORMANCE.md (WCAG 2.2 AA), RECORDING.md
+```
 
-## Co-design
-| What our co-designer found (their words) | What we changed |
-|---|---|
-| _[e.g. “TalkBack said ‘button’ and nothing else”]_ | _[Named every button]_ |
+To change a question, edit the JSON in `flows/` (keep `en` and `am`). Validation rules must match in
+`web/src/engine/validators.ts` and `server/src/domain/validate.rs`.
 
-## Known limitations
-See [docs/FEATURES.md](docs/FEATURES.md). _[Update before submitting, for example: sign clips cover the sign-up questions only; voice recordings are not uploaded yet; partner/employer sign-in is not built.]_
+## Not built yet
+
+- Authentication for employer and partner endpoints (anyone who can reach the API can read applications).
+- Offline mode (service worker); opening a "continue later" link directly.
+- Recorded audio prompts and sign-language clips (`web/public/audio/`, `web/public/sign/`; see `docs/RECORDING.md`).
+
+Full status: [docs/FEATURES.md](docs/FEATURES.md).
 
 ## Licence
-_[Licence named by ALX at kick-off]_ — see [LICENSE](LICENSE).
+
+See [LICENSE](LICENSE).
