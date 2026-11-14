@@ -1,0 +1,54 @@
+/* Styles for the demo host pages only (the component styles itself inside its shadow DOM). */
+:root {
+  --canvas: #eef0f5; --fg: #16151d; --muted: #5a5b6b; --surface: rgba(255, 255, 255, 0.82); --hair: #e2e3eb;
+  --accent: #6a4bf0; --accent-fg: #ffffff; --soft: #efeaff; --focus: #c2410c; color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #121118; --fg: #ecebf3; --muted: #b3b2c4; --surface: rgba(28, 27, 36, 0.85); --hair: #2e2d3a;
+    --accent: #b9a6ff; --accent-fg: #17132b; --soft: #2a2440; --focus: #ffb547; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html.lehulu-big { font-size: 125%; } /* the host reacting to the lehulu:preferences event */
+body {
+  margin: 0; color: var(--fg); min-height: 100vh; background-color: var(--canvas);
+  background-image:
+    radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%);
+  font: 1rem/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Ethiopic', sans-serif;
+}
+a { color: var(--accent); text-underline-offset: 0.18em; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.skip { position: absolute; left: -999px; top: 0; background: #fff; color: #000; padding: .6rem 1rem; z-index: 20; border-radius: 12px; }
+.skip:focus { left: 1rem; top: 1rem; }
+
+/* A fixed top bar like Savanna's, to prove focused items are never hidden behind it (WCAG 2.4.11). */
+.topbar {
+  position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center;
+  margin: 12px max(12px, env(safe-area-inset-left)) 0; padding: .55rem .75rem .55rem 1rem;
+  background: var(--surface); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--hair); border-radius: 20px; box-shadow: 0 6px 24px rgba(22, 21, 29, .06);
+}
+.topbar strong { display: inline-flex; align-items: center; gap: .55rem; font-size: 1.05rem; letter-spacing: -.01em; }
+.topbar strong::before {
+  content: ''; width: 1.6rem; height: 1.6rem; border-radius: 8px; flex: none;
+  background: linear-gradient(135deg, #9b84ff, #6a4bf0);
+}
+.topbar nav { display: flex; gap: .35rem; flex-wrap: wrap; margin-left: auto; }
+.topbar nav a {
+  color: var(--fg); text-decoration: none; font-weight: 600; font-size: .95rem;
+  min-height: 44px; padding: 0 1rem; display: inline-flex; align-items: center; border-radius: 12px;
+}
+.topbar nav a:hover { background: var(--soft); }
+.topbar nav a[aria-current='page'] { background: var(--accent); color: var(--accent-fg); }
+
+main { max-width: 36rem; margin: 0 auto; padding: 2rem max(16px, env(safe-area-inset-left)) 4rem; display: grid; gap: 1.25rem; }
+main.wide { max-width: 72rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr)); align-items: start; }
+main.wide > h1, main.wide > p { grid-column: 1 / -1; }
+h1 { margin: 0; font-size: clamp(2rem, 1.4rem + 2.4vw, 2.75rem); line-height: 1.1; font-weight: 600; letter-spacing: -.02em; }
+.muted { color: var(--muted); }
+pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--hair); padding: .9rem; border-radius: 16px; font-size: .85rem; }
+details { background: var(--surface); border: 1px solid var(--hair); border-radius: 20px; padding: .9rem 1.1rem; }
+details summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+details[open] { display: grid; gap: .6rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

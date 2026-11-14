@@ -1,0 +1,405 @@
+{
+  "id": "signup",
+  "version": 1,
+  "finish": {
+    "en": "Create my account",
+    "am": "መለያዬን ፍጠር"
+  },
+  "steps": [
+    {
+      "id": "language",
+      "type": "choice",
+      "icon": "🌐",
+      "title": {
+        "en": "Which language?",
+        "am": "የትኛው ቋንቋ?"
+      },
+      "short": {
+        "en": "Language",
+        "am": "ቋንቋ"
+      },
+      "options": [
+        {
+          "value": "am",
+          "icon": "ፊ",
+          "label": "አማርኛ",
+          "lang": "am"
+        },
+        {
+          "value": "en",
+          "icon": "A",
+          "label": "English",
+          "lang": "en"
+        }
+      ],
+      "validate": [
+        {
+          "rule": "required",
+          "message": {
+            "en": "Choose a language.",
+            "am": "ቋንቋ ይምረጡ።"
+          }
+        }
+      ],
+      "alwaysShowMedia": true
+    },
+    {
+      "id": "ways",
+      "type": "checks",
+      "icon": "📱",
+      "title": {
+        "en": "How do you use your phone?",
+        "am": "ስልክዎን እንዴት ይጠቀማሉ?"
+      },
+      "short": {
+        "en": "How I use my phone",
+        "am": "አጠቃቀም"
+      },
+      "hint": {
+        "en": "Choose any. You can change this later. We never ask about your disability.",
+        "am": "ማንኛውንም ይምረጡ። በኋላ መቀየር ይችላሉ። ስለ አካል ጉዳትዎ አንጠይቅም።"
+      },
+      "alwaysShowMedia": true,
+      "options": [
+        {
+          "value": "listen",
+          "icon": "🔈",
+          "label": {
+            "en": "I listen (screen reader)",
+            "am": "አዳምጣለሁ (ስክሪን አንባቢ)"
+          },
+          "sub": {
+            "en": "Everything is spoken properly",
+            "am": "ሁሉም በትክክል ይነበባል"
+          }
+        },
+        {
+          "value": "speak",
+          "icon": "🎤",
+          "label": {
+            "en": "I speak my answers",
+            "am": "በድምፅ እመልሳለሁ"
+          },
+          "sub": {
+            "en": "A big mic on every question",
+            "am": "በእያንዳንዱ ጥያቄ ትልቅ ማይክ"
+          }
+        },
+        {
+          "value": "pictures",
+          "icon": "🖼️",
+          "label": {
+            "en": "Pictures and audio, few words",
+            "am": "ሥዕልና ድምፅ፣ ጥቂት ቃላት"
+          },
+          "sub": {
+            "en": "Icons and recorded Amharic voice",
+            "am": "ምልክቶችና የተቀዳ የአማርኛ ድምፅ"
+          }
+        },
+        {
+          "value": "big",
+          "icon": "👆",
+          "label": {
+            "en": "Big and simple",
+            "am": "ትልቅና ቀላል"
+          },
+          "sub": {
+            "en": "Large text, big buttons, less typing",
+            "am": "ትልቅ ጽሑፍ፣ ትልቅ ቁልፎች"
+          }
+        },
+        {
+          "value": "sign",
+          "icon": "🤟",
+          "label": {
+            "en": "Sign language",
+            "am": "የምልክት ቋንቋ"
+          },
+          "sub": {
+            "en": "A sign video for each question, no sound needed",
+            "am": "ለእያንዳንዱ ጥያቄ የምልክት ቪዲዮ"
+          }
+        },
+        {
+          "value": "data",
+          "icon": "📶",
+          "label": {
+            "en": "Save my data",
+            "am": "ዳታ ቆጥብ"
+          },
+          "sub": {
+            "en": "No video or audio unless I tap",
+            "am": "ካልነካሁ ቪዲዮ ወይም ድምፅ አይጫንም"
+          }
+        }
+      ]
+    },
+    {
+      "id": "name",
+      "type": "text",
+      "icon": "👤",
+      "autocomplete": "name",
+      "title": {
+        "en": "What is your name?",
+        "am": "ስምዎ ማን ነው?"
+      },
+      "short": {
+        "en": "Name",
+        "am": "ስም"
+      },
+      "hint": {
+        "en": "Your full name.",
+        "am": "ሙሉ ስምዎ።"
+      },
+      "validate": [
+        {
+          "rule": "required",
+          "message": {
+            "en": "Enter your name.",
+            "am": "ስምዎን ያስገቡ።"
+          }
+        }
+      ]
+    },
+    {
+      "id": "phone",
+      "type": "tel",
+      "icon": "📱",
+      "autocomplete": "tel",
+      "title": {
+        "en": "What is your phone number?",
+        "am": "የስልክ ቁጥርዎ ስንት ነው?"
+      },
+      "short": {
+        "en": "Phone",
+        "am": "ስልክ"
+      },
+      "hint": {
+        "en": "Example: 0911 234 567",
+        "am": "ምሳሌ፦ 0911 234 567"
+      },
+      "validate": [
+        {
+          "rule": "et_phone",
+          "message": {
+            "en": "Enter 10 digits that start with 09 or 07, for example 0911 234 567.",
+            "am": "በ09 ወይም 07 የሚጀምር 10 አሃዝ ያስገቡ፤ ለምሳሌ 0911 234 567።"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dob",
+      "type": "et-date",
+      "icon": "📅",
+      "title": {
+        "en": "When were you born?",
+        "am": "መቼ ተወለዱ?"
+      },
+      "short": {
+        "en": "Date of birth",
+        "am": "የትውልድ ቀን"
+      },
+      "hint": {
+        "en": "Ethiopian calendar: day, month, year.",
+        "am": "በኢትዮጵያ ዘመን አቆጣጠር፦ ቀን፣ ወር፣ ዓመት።"
+      },
+      "validate": [
+        {
+          "rule": "et_date",
+          "message": {
+            "en": "Choose a day, a month and a year.",
+            "am": "ቀን፣ ወር እና ዓመት ይምረጡ።"
+          }
+        }
+      ]
+    },
+    {
+      "id": "idType",
+      "type": "choice",
+      "icon": "🪪",
+      "title": {
+        "en": "Do you have an ID with you?",
+        "am": "መታወቂያ አለዎት?"
+      },
+      "short": {
+        "en": "ID",
+        "am": "መታወቂያ"
+      },
+      "hint": {
+        "en": "Not required. Any of these is fine, and you can start learning today.",
+        "am": "ግዴታ አይደለም። ማንኛውም ይቻላል፤ ዛሬ መማር ይጀምራሉ።"
+      },
+      "options": [
+        {
+          "value": "kebele",
+          "icon": "🏠",
+          "label": {
+            "en": "Fayda or kebele ID",
+            "am": "ፋይዳ ወይም የቀበሌ መታወቂያ"
+          }
+        },
+        {
+          "value": "refugee",
+          "icon": "📄",
+          "label": {
+            "en": "Refugee ID",
+            "am": "የስደተኛ መታወቂያ"
+          }
+        },
+        {
+          "value": "other",
+          "icon": "🗂️",
+          "label": {
+            "en": "Another document",
+            "am": "ሌላ ሰነድ"
+          },
+          "sub": {
+            "en": "School or birth certificate, a letter",
+            "am": "የትምህርት ወይም የልደት ሰርተፊኬት፣ ደብዳቤ"
+          }
+        },
+        {
+          "value": "partner",
+          "icon": "🤝",
+          "label": {
+            "en": "No document. A partner can vouch for me.",
+            "am": "ሰነድ የለኝም። አጋር ይመሰክርልኛል።"
+          }
+        },
+        {
+          "value": "later",
+          "icon": "⏭️",
+          "label": {
+            "en": "Skip for now",
+            "am": "ለአሁን እለፍ"
+          }
+        }
+      ],
+      "validate": [
+        {
+          "rule": "required",
+          "message": {
+            "en": "Choose one. If you are not sure, choose “Skip for now”.",
+            "am": "አንዱን ይምረጡ። ካላወቁ “ለአሁን እለፍ” ይምረጡ።"
+          }
+        }
+      ]
+    },
+    {
+      "id": "idNumber",
+      "type": "text",
+      "icon": "🔢",
+      "optional": true,
+      "when": {
+        "field": "idType",
+        "in": [
+          "kebele",
+          "refugee",
+          "other"
+        ]
+      },
+      "title": {
+        "en": "ID number (optional)",
+        "am": "የመታወቂያ ቁጥር (አማራጭ)"
+      },
+      "short": {
+        "en": "ID number",
+        "am": "የመታወቂያ ቁጥር"
+      },
+      "hint": {
+        "en": "You can leave this empty and add it later. No photo is needed.",
+        "am": "ባዶ መተው ይችላሉ። ፎቶ አያስፈልግም።"
+      }
+    },
+    {
+      "id": "partner",
+      "type": "choice",
+      "icon": "🤝",
+      "when": {
+        "field": "idType",
+        "in": [
+          "partner"
+        ]
+      },
+      "title": {
+        "en": "Who knows you?",
+        "am": "ማን ያውቅዎታል?"
+      },
+      "short": {
+        "en": "Partner",
+        "am": "አጋር"
+      },
+      "hint": {
+        "en": "We ask them to confirm. You do not wait: learning starts today.",
+        "am": "እንዲያረጋግጡ እንጠይቃለን። አይጠብቁም፤ ዛሬ ይጀምራሉ።"
+      },
+      "options": [
+        {
+          "value": "aaapd",
+          "icon": "🏢",
+          "label": "AAAPD"
+        },
+        {
+          "value": "tomorrow-is-better",
+          "icon": "🏢",
+          "label": "Tomorrow is Better"
+        },
+        {
+          "value": "refugee-agency",
+          "icon": "🏢",
+          "label": {
+            "en": "Refugee agency",
+            "am": "የስደተኞች ድርጅት"
+          }
+        },
+        {
+          "value": "school",
+          "icon": "🏫",
+          "label": {
+            "en": "My school or training centre",
+            "am": "ትምህርት ቤቴ ወይም የሥልጠና ማዕከል"
+          }
+        }
+      ],
+      "validate": [
+        {
+          "rule": "required",
+          "message": {
+            "en": "Choose who knows you.",
+            "am": "የሚያውቅዎትን ይምረጡ።"
+          }
+        }
+      ]
+    },
+    {
+      "id": "supportNeeds",
+      "type": "checks",
+      "icon": "🧭",
+      "optionsFrom": "needs",
+      "prefill": "needsFromWays",
+      "title": {
+        "en": "Support that helps you",
+        "am": "የሚረዳዎ ድጋፍ"
+      },
+      "short": {
+        "en": "Support",
+        "am": "ድጋፍ"
+      },
+      "hint": {
+        "en": "We ticked these from your first answer. Change anything. No medical proof. Only shared if you say yes.",
+        "am": "ከመጀመሪያው መልስዎ ተመርጠዋል። ማንኛውንም ይቀይሩ። የሕክምና ማስረጃ አያስፈልግም። ካልፈቀዱ አይጋራም።"
+      }
+    },
+    {
+      "id": "review",
+      "type": "review",
+      "icon": "✅",
+      "title": {
+        "en": "Check your answers",
+        "am": "መልሶችዎን ያረጋግጡ"
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "lehulu-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --mode demo",
+    "dev:api": "vite --mode api",
+    "fonts": "node scripts/copy-fonts.mjs",
+    "build": "pnpm run fonts && tsc --noEmit && vite build --mode api && vite build --config vite.lib.config.ts --mode api",
+    "build:demo": "pnpm run fonts && tsc --noEmit && vite build --mode demo && vite build --config vite.lib.config.ts --mode demo",
+    "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:a11y": "playwright test --grep @a11y",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lit": "3.3.3"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@fontsource/noto-sans-ethiopic": "5.3.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3",
+    "vite": "5.4.21",
+    "vitest": "2.1.9"
+  },
+  "packageManager": "pnpm@12.15.0"
+}

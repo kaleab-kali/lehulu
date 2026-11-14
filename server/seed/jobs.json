@@ -1,0 +1,6 @@
+[
+  { "id": "job-support-agent", "title": "Customer support agent (Amharic)", "org": "Afro Connect", "city": "Addis Ababa", "remote": false, "supportOffered": ["sr", "text", "voice", "time"] },
+  { "id": "job-web-dev", "title": "Junior web developer", "org": "Lideta Tech", "city": null, "remote": true, "supportOffered": ["sr", "big", "time"] },
+  { "id": "job-warehouse", "title": "Warehouse records assistant", "org": "Merkato Supply", "city": "Addis Ababa", "remote": false, "supportOffered": ["step", "easy"] },
+  { "id": "job-social", "title": "Social media assistant", "org": "Bole Media", "city": null, "remote": true, "supportOffered": ["text", "sign", "easy", "big"] }
+]

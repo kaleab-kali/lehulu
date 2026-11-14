@@ -1,0 +1,26 @@
+{
+  "id": "apply",
+  "version": 1,
+  "finish": { "en": "Send application", "am": "ማመልከቻ ላክ" },
+  "steps": [
+    {
+      "id": "why", "type": "text", "icon": "💡",
+      "title": { "en": "Why do you want this job?", "am": "ይህን ሥራ ለምን ይፈልጋሉ?" },
+      "short": { "en": "Why this job", "am": "ለምን" },
+      "hint": { "en": "A short answer is fine. Type it or use your voice.", "am": "አጭር መልስ በቂ ነው። ይጻፉ ወይም በድምፅ ይመልሱ።" },
+      "validate": [{ "rule": "required", "message": { "en": "Write or say a short answer.", "am": "አጭር መልስ ይጻፉ ወይም ይናገሩ።" } }]
+    },
+    {
+      "id": "shareSupport", "type": "choice", "icon": "🔒",
+      "title": { "en": "Share your support needs with this employer?", "am": "የድጋፍ ፍላጎትዎን ለዚህ ቀጣሪ ያጋሩ?" },
+      "short": { "en": "Share support", "am": "ድጋፍ ማጋራት" },
+      "hint": { "en": "If you say yes, they see only the practical support you chose. Never a diagnosis.", "am": "አዎ ካሉ የመረጡትን ድጋፍ ብቻ ያያሉ።" },
+      "options": [
+        { "value": "no",  "icon": "🔒", "label": { "en": "No, keep them private", "am": "አይ፣ ሚስጥር ይሁን" } },
+        { "value": "yes", "icon": "📨", "label": { "en": "Yes, this employer only", "am": "አዎ፣ ለዚህ ቀጣሪ ብቻ" } }
+      ],
+      "validate": [{ "rule": "required", "message": { "en": "Choose yes or no.", "am": "አዎ ወይም አይ ይምረጡ።" } }]
+    },
+    { "id": "review", "type": "review", "icon": "✅", "title": { "en": "Check your application", "am": "ማመልከቻዎን ያረጋግጡ" } }
+  ]
+}

@@ -1,0 +1,34 @@
+# Full Lehulu stack on one port.
+#   docker compose up --build        → http://localhost:8080
+#   docker compose --profile test run --rm test   → Playwright + axe against the running stack
+#   docker compose down -v           → stop and delete all data
+services:
+  lehulu:
+    build: .
+    image: lehulu:local
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${PORT:-8080}:8080"
+    volumes:
+      - lehulu-data:/app/data
+    restart: unless-stopped
+
+  test:
+    profiles: ["test"]
+    image: mcr.microsoft.com/playwright:v1.63.0-noble   # must match @playwright/test in web/package.json
+    working_dir: /work/web
+    volumes:
+      - .:/work
+      - /work/web/node_modules
+    environment:
+      BASE_URL: http://lehulu:8080
+      CI: "1"
+    depends_on:
+      lehulu:
+        condition: service_healthy
+    command: sh -c "corepack enable pnpm && pnpm install --frozen-lockfile && pnpm exec playwright test --reporter=line"
+
+volumes:
+  lehulu-data:

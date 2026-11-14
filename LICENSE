@@ -1,0 +1,9 @@
+Licence: to be confirmed.
+
+The hackathon organisers (ALX Ethiopia) name the open licence at kick-off. Replace this file with that
+licence text before submission.
+
+Third-party components:
+- Noto Sans Ethiopic font — SIL Open Font License 1.1 (via @fontsource/noto-sans-ethiopic)
+- Lit — BSD-3-Clause
+- axum, tokio, sqlx, utoipa, serde and other Rust crates — MIT or Apache-2.0

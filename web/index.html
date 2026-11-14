@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Join Savanna · Lehulu sign-up</title>
+    <link rel="stylesheet" href="/src/pages.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to sign-up</a>
+    <header class="topbar">
+      <strong>ALX Savanna</strong><span class="muted" style="color:inherit;opacity:.85">demo host page</span>
+      <nav aria-label="Lehulu demo pages">
+        <a href="jobs/">Jobs</a>
+        <a href="partner/">Partner</a>
+        <a href="employer/">Employer</a>
+      </nav>
+    </header>
+    <main id="main">
+      <h1>Join Savanna</h1>
+      <p class="muted">Sign up below. There is no time limit, and you can stop and continue later.</p>
+
+      <!-- Level 1: this one tag (plus the script below) is all a host page needs. -->
+      <lehulu-signup lang="en" jobs-url="jobs/" profile-url="jobs/#profile"></lehulu-signup>
+
+      <p id="host-status" role="status" class="muted"></p>
+
+      <details>
+        <summary>How this page added Lehulu</summary>
+        <pre><code>&lt;script type="module" src="https://YOUR-LEHULU-HOST/lehulu.js"&gt;&lt;/script&gt;
+&lt;lehulu-signup lang="am" jobs-url="/jobs"&gt;&lt;/lehulu-signup&gt;</code></pre>
+        <p>To try it inside the real Savanna starter pages, run <code>scripts/import-savanna-starter.sh</code>.</p>
+      </details>
+    </main>
+    <script type="module" src="/src/pages.ts"></script>
+  </body>
+</html>

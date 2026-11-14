@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "about": "The shared list of practical supports. Learners choose from it; employers say which they offer. Never diagnoses.",
+  "needs": [
+    { "id": "sr",    "icon": "🔈", "label": { "en": "Screen-reader-friendly tests and forms", "am": "ለስክሪን አንባቢ ተስማሚ ፈተናና ቅጽ" }, "request": { "en": "Please send tests and forms that work with a screen reader.", "am": "እባክዎ ከስክሪን አንባቢ ጋር የሚሰሩ ፈተናዎችና ቅጾች ይላኩ።" } },
+    { "id": "voice", "icon": "🎤", "label": { "en": "Voice answers accepted", "am": "በድምፅ መመለስ ይቻላል" }, "request": { "en": "Please accept voice answers.", "am": "እባክዎ በድምፅ የተሰጡ መልሶችን ይቀበሉ።" } },
+    { "id": "easy",  "icon": "🖼️", "label": { "en": "Simple words and audio", "am": "ቀላል ቃላትና ድምፅ" }, "request": { "en": "Please use simple words, and audio where possible.", "am": "እባክዎ ቀላል ቃላትና ድምፅ ይጠቀሙ።" } },
+    { "id": "big",   "icon": "🔠", "label": { "en": "Large print and big buttons", "am": "ትልቅ ጽሑፍና ትልቅ ቁልፎች" }, "request": { "en": "Please use large print.", "am": "እባክዎ ትልቅ ጽሑፍ ይጠቀሙ።" } },
+    { "id": "sign",  "icon": "🤟", "label": { "en": "Sign language interpreter", "am": "የምልክት ቋንቋ አስተርጓሚ" }, "request": { "en": "Please arrange an Ethiopian Sign Language interpreter for the interview.", "am": "እባክዎ ለቃለ መጠይቅ የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ ያዘጋጁ።" } },
+    { "id": "text",  "icon": "💬", "label": { "en": "Contact by text, not calls", "am": "በመልእክት እንጂ በጥሪ አይደለም" }, "request": { "en": "Please contact me by text message, not phone calls.", "am": "እባክዎ በመልእክት ያግኙኝ፤ አይደውሉ።" } },
+    { "id": "time",  "icon": "⏳", "label": { "en": "Extra time for tests", "am": "ለፈተና ተጨማሪ ጊዜ" }, "request": { "en": "Please allow extra time for tests.", "am": "እባክዎ ለፈተና ተጨማሪ ጊዜ ይስጡ።" } },
+    { "id": "step",  "icon": "♿", "label": { "en": "Step-free building", "am": "ደረጃ የሌለው ሕንፃ" }, "request": { "en": "Please hold the interview in a step-free room.", "am": "እባክዎ ቃለ መጠይቁን ደረጃ በሌለው ክፍል ያድርጉ።" } }
+  ],
+  "fromWays": { "listen": ["sr", "time"], "speak": ["voice"], "pictures": ["easy"], "big": ["big", "time"], "sign": ["sign", "text"], "data": [] }
+}

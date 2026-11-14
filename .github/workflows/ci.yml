@@ -1,0 +1,47 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: server } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: "rustfmt, clippy" }
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: server }
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  web:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: corepack enable pnpm && pnpm install --frozen-lockfile
+      - run: pnpm run fonts && pnpm run typecheck
+      - run: pnpm test
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: End-to-end + axe (fails on any serious or critical issue)
+        run: pnpm exec playwright test --reporter=line
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-report, path: web/test-results }
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t lehulu:ci .
+      - name: Start and check health
+        run: |
+          docker run -d --name lehulu -p 8080:8080 lehulu:ci
+          for i in $(seq 1 30); do curl -fs localhost:8080/healthz && break; sleep 1; done
+          curl -fs localhost:8080/openapi.json > /dev/null
+          curl -fs localhost:8080/v1/jobs > /dev/null
