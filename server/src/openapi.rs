@@ -23,6 +23,8 @@ use utoipa::OpenApi;
         crate::routes::jobs::create_job,
         crate::routes::applications::create_application,
         crate::routes::applications::list_for_job,
+        crate::routes::media::upload,
+        crate::routes::media::get,
         crate::routes::partners::list_partners,
         crate::routes::partners::list_vouches,
         crate::routes::partners::decide_vouch,
@@ -33,6 +35,7 @@ use utoipa::OpenApi;
         (name = "jobs", description = "Jobs and the support they offer. JSON-LD available."),
         (name = "applications", description = "Support needs shared only with consent, per job."),
         (name = "partners", description = "Partners confirm learners without ID documents."),
+        (name = "media", description = "Voice answers. The recording itself is the answer; no speech service needed."),
         (name = "flows", description = "The JSON question flows used by every screen.")
     )
 )]

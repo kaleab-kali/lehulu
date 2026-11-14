@@ -36,7 +36,9 @@ test('@a11y sign up with no kebele ID, partner vouches, apply to a job', async (
   await next(page);
 
   // 3. Name
-  await f.getByRole('textbox', { name: 'What is your name?' }).fill('Hanna Tesfaye');
+  // Unique per run: against a shared server (BASE_URL), other runs' learners are in the same lists.
+  const learnerName = `Hanna Tesfaye ${test.info().project.name} ${Date.now() % 1_000_000}`;
+  await f.getByRole('textbox', { name: 'What is your name?' }).fill(learnerName);
   await next(page);
 
   // 4. Phone: a plain, announced error first
@@ -75,7 +77,7 @@ test('@a11y sign up with no kebele ID, partner vouches, apply to a job', async (
   // Partner confirms
   await page.goto('partner/');
   await noSeriousIssues(page, 'partner');
-  await page.locator('lehulu-partner').getByRole('button', { name: /confirm/ }).click();
+  await page.locator('lehulu-partner').getByRole('listitem').filter({ hasText: learnerName }).getByRole('button', { name: /confirm/ }).click();
   await expect(page.locator('lehulu-partner').getByRole('status')).toContainText('confirmed');
 
   // Jobs: filter pre-set from sign-up, count announced, titles are headings
@@ -108,6 +110,99 @@ test('@a11y employer posts a job with the support it offers', async ({ page }) =
   await next(page);
   await f.getByRole('button', { name: 'Post job' }).click();
   await expect(f.getByRole('heading', { name: 'Job posted' })).toBeVisible();
+});
+
+/** Press Tab until `target` has focus (keyboard only, no clicks). */
+async function tabTo(page: Page, target: ReturnType<Page['locator']>, max = 25) {
+  for (let k = 0; k < max; k++) {
+    if (await target.evaluate((el) => el.matches(':focus')).catch(() => false)) return;
+    await page.keyboard.press('Tab');
+  }
+  await expect(target).toBeFocused();
+}
+
+test('@a11y voice answers: record, play back, delete, record again; the employer hears it', async ({ page }) => {
+  const f = flow(page);
+  await f.getByRole('radio', { name: 'English' }).check();
+  await next(page);
+  await f.getByRole('checkbox', { name: /I speak my answers/ }).check();
+  await next(page);
+
+  // Name by voice only, with the keyboard: Enter starts, Enter again stops.
+  await expect(f.getByRole('heading', { name: 'What is your name?' })).toBeFocused();
+  const voice = f.getByRole('button', { name: 'Answer by voice' });
+  await tabTo(page, voice);
+  await page.keyboard.press('Enter');
+  const stop = f.getByRole('button', { name: 'Stop recording' });
+  await expect(stop).toBeFocused();
+  await expect(f.getByRole('status')).toContainText('Recording');
+  await page.waitForTimeout(1200);
+  await page.keyboard.press('Enter');
+  await expect(f.getByRole('status')).toContainText('Recording saved');
+  await expect(f.getByRole('button', { name: 'Play my recording' })).toBeVisible();
+  await expect(f.getByRole('button', { name: 'Record again' })).toBeVisible();
+  await expect(f.getByRole('button', { name: 'Delete recording' })).toBeVisible();
+  await noSeriousIssues(page, 'name answered by voice');
+  await tabTo(page, f.getByRole('button', { name: 'Play my recording' }));
+  await page.keyboard.press('Enter');
+  await next(page); // a recording counts as the answer: no typing needed
+
+  await f.getByRole('textbox', { name: 'What is your phone number?' }).fill('0911 234 567');
+  await next(page);
+  await f.getByLabel('Day').selectOption('5');
+  await f.getByLabel('Month').selectOption({ label: 'Hidar' });
+  await f.getByLabel(/^Year/).selectOption('2000');
+  await next(page);
+  await f.getByRole('radio', { name: /Skip for now/ }).check();
+  await next(page);
+  await next(page); // support needs, pre-ticked
+
+  // Review: the voice answer can be played back and changed.
+  await expect(f.getByRole('heading', { name: 'Check your answers' })).toBeFocused();
+  await expect(f.getByText('Answered by voice')).toBeVisible();
+  await expect(f.getByRole('button', { name: 'Play recording: Name' })).toBeVisible();
+  await noSeriousIssues(page, 'review with a voice answer');
+  await next(page);
+  await expect(f.getByRole('heading', { name: 'Your account is ready' })).toBeFocused();
+
+  // Apply by voice: delete the recording, see the plain error, record again.
+  await page.goto('jobs/');
+  const jobs = page.locator('lehulu-jobs');
+  const firstJob = jobs.getByRole('heading', { level: 3 }).first().getByRole('link');
+  const title = (await firstJob.textContent())!.trim();
+  await firstJob.click();
+  const apply = jobs.locator('lehulu-signup');
+  await expect(apply.getByRole('heading', { name: 'Why do you want this job?' })).toBeFocused();
+  await tabTo(page, apply.getByRole('button', { name: 'Answer by voice' }));
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Enter');
+  await expect(apply.getByRole('status')).toContainText('Recording saved');
+  await tabTo(page, apply.getByRole('button', { name: 'Delete recording' }));
+  await page.keyboard.press('Enter');
+  await expect(apply.getByRole('status')).toContainText('Recording deleted');
+  await apply.getByRole('button', { name: /^Next/ }).click();
+  await expect(apply.getByRole('alert')).toBeVisible();
+  await tabTo(page, apply.getByRole('button', { name: 'Answer by voice' }));
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Enter');
+  await expect(apply.getByRole('status')).toContainText('Recording saved');
+  await apply.getByRole('button', { name: /^Next/ }).click();
+  await apply.getByRole('radio', { name: 'No, keep them private' }).check();
+  await apply.getByRole('button', { name: /^Next/ }).click();
+  await expect(apply.getByRole('button', { name: /^Play recording/ })).toBeVisible();
+  await apply.getByRole('button', { name: 'Send application' }).click();
+  await expect(apply.getByRole('heading', { name: 'Application sent' })).toBeVisible();
+
+  // The employer can play the spoken answer and the spoken name.
+  await page.goto('employer/');
+  const received = page.locator('lehulu-applications');
+  await received.getByLabel('Job', { exact: true }).selectOption({ label: title });
+  // .first(): against a shared server, other runs may have applied to the same job by voice too.
+  await expect(received.getByLabel('Voice answer: why they want this job').first()).toBeVisible();
+  await expect(received.getByLabel('Name, spoken by the learner').first()).toBeVisible();
+  await noSeriousIssues(page, 'employer with voice answers');
 });
 
 // Level 1 inside the real ALX Savanna starter pages (added by scripts/import-savanna-starter.sh).

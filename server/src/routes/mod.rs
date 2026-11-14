@@ -6,6 +6,7 @@ pub mod drafts;
 pub mod flows;
 pub mod jobs;
 pub mod learners;
+pub mod media;
 pub mod partners;
 
 use crate::{adapters::sms::SmsSimulator, config::Config, domain::needs::Needs, openapi::ApiDoc};
@@ -61,6 +62,8 @@ pub fn router(state: AppState) -> Router {
         .route("/jobs", get(jobs::list_jobs).post(jobs::create_job))
         .route("/jobs/{id}/applications", get(applications::list_for_job))
         .route("/applications", post(applications::create_application))
+        .route("/media", post(media::upload))
+        .route("/media/{id}", get(media::get))
         .route("/partners", get(partners::list_partners))
         .route("/partners/{id}/vouches", get(partners::list_vouches))
         .route(
@@ -122,6 +125,36 @@ mod tests {
             status,
             serde_json::from_slice(&bytes).unwrap_or(Value::Null),
         )
+    }
+
+    /// Upload raw bytes to /v1/media; returns (status, body, content).
+    async fn upload(app: &Router, mime: &str, bytes: &'static [u8]) -> (StatusCode, Value) {
+        let req = Request::builder()
+            .method("POST")
+            .uri("/v1/media")
+            .header("content-type", mime)
+            .body(Body::from(bytes))
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        let status = res.status();
+        let bytes = res.into_body().collect().await.unwrap().to_bytes();
+        (
+            status,
+            serde_json::from_slice(&bytes).unwrap_or(Value::Null),
+        )
+    }
+
+    async fn fetch_raw(app: &Router, uri: &str) -> (StatusCode, String, Vec<u8>) {
+        let req = Request::builder().uri(uri).body(Body::empty()).unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        let status = res.status();
+        let mime = res
+            .headers()
+            .get("content-type")
+            .map(|v| v.to_str().unwrap_or_default().to_string())
+            .unwrap_or_default();
+        let bytes = res.into_body().collect().await.unwrap().to_bytes().to_vec();
+        (status, mime, bytes)
     }
 
     fn learner(id_type: &str, partner: Option<&str>) -> Value {
@@ -202,5 +235,103 @@ mod tests {
                 .count(),
             1
         );
+    }
+
+    #[tokio::test]
+    async fn voice_answers_reach_partner_and_employer_then_delete_removes_them() {
+        let app = app().await;
+        let (s, name_rec) = upload(&app, "audio/webm", b"fake-opus-name").await;
+        assert_eq!(s, StatusCode::CREATED, "{name_rec}");
+        let name_id = name_rec["id"].as_str().unwrap().to_string();
+        assert_eq!(name_rec["url"], format!("/v1/media/{name_id}"));
+
+        // Name given by voice only: the typed name may be empty.
+        let mut body = learner("partner", Some("aaapd"));
+        body["name"] = json!("");
+        body["nameAudio"] = json!(name_id);
+        let (s, l) = call(&app, "POST", "/v1/learners", Some(body)).await;
+        assert_eq!(s, StatusCode::CREATED, "{l}");
+        assert_eq!(l["nameAudio"], name_id.as_str());
+        let lid = l["id"].as_str().unwrap().to_string();
+
+        let (_, pending) = call(&app, "GET", "/v1/partners/aaapd/vouches", None).await;
+        assert_eq!(pending[0]["nameAudio"], format!("/v1/media/{name_id}"));
+
+        // Why by voice only.
+        let (_, why_rec) = upload(&app, "audio/ogg; codecs=opus", b"fake-opus-why").await;
+        let why_id = why_rec["id"].as_str().unwrap().to_string();
+        let (s, e) = call(
+            &app,
+            "POST",
+            "/v1/applications",
+            Some(json!({ "jobId": "job-support-agent", "learnerId": lid, "whyAudio": why_id, "shareSupport": false })),
+        )
+        .await;
+        assert_eq!(s, StatusCode::CREATED, "{e}");
+        let (_, apps) = call(&app, "GET", "/v1/jobs/job-support-agent/applications", None).await;
+        let a = &apps[0];
+        assert_eq!(a["whyAudio"], format!("/v1/media/{why_id}"));
+        assert_eq!(a["learnerNameAudio"], format!("/v1/media/{name_id}"));
+        assert!(a["why"].is_null());
+
+        let (s, mime, bytes) = fetch_raw(&app, &format!("/v1/media/{why_id}")).await;
+        assert_eq!(s, StatusCode::OK);
+        assert_eq!(mime, "audio/ogg; codecs=opus");
+        assert_eq!(bytes, b"fake-opus-why");
+
+        // Right to erasure covers recordings.
+        let (s, _) = call(&app, "DELETE", &format!("/v1/learners/{lid}"), None).await;
+        assert_eq!(s, StatusCode::NO_CONTENT);
+        for id in [&name_id, &why_id] {
+            let (s, _, _) = fetch_raw(&app, &format!("/v1/media/{id}")).await;
+            assert_eq!(s, StatusCode::NOT_FOUND);
+        }
+    }
+
+    #[tokio::test]
+    async fn voice_upload_errors_are_plain() {
+        let app = app().await;
+        let (s, e) = upload(&app, "text/plain", b"hello").await;
+        assert_eq!(s, StatusCode::UNPROCESSABLE_ENTITY);
+        assert_eq!(e["error"]["code"], "audio_type");
+        let (s, e) = upload(&app, "audio/webm", b"").await;
+        assert_eq!(s, StatusCode::UNPROCESSABLE_ENTITY);
+        assert_eq!(e["error"]["code"], "audio_empty");
+        let (s, _, _) = fetch_raw(&app, "/v1/media/../../secret").await;
+        assert_eq!(s, StatusCode::NOT_FOUND);
+
+        // No typed name and no recording: a plain error on the name field.
+        let mut body = learner("later", None);
+        body["name"] = json!(" ");
+        let (s, e) = call(&app, "POST", "/v1/learners", Some(body)).await;
+        assert_eq!(s, StatusCode::UNPROCESSABLE_ENTITY);
+        assert_eq!(e["error"]["field"], "name");
+
+        // An application needs words or a recording.
+        let (_, l) = call(&app, "POST", "/v1/learners", Some(learner("later", None))).await;
+        let (s, e) = call(
+            &app,
+            "POST",
+            "/v1/applications",
+            Some(json!({ "jobId": "job-support-agent", "learnerId": l["id"], "shareSupport": false })),
+        )
+        .await;
+        assert_eq!(s, StatusCode::UNPROCESSABLE_ENTITY);
+        assert_eq!(e["error"]["field"], "why");
+    }
+
+    #[tokio::test]
+    async fn a_recording_belongs_to_one_learner() {
+        let app = app().await;
+        let (_, rec) = upload(&app, "audio/webm", b"mine").await;
+        let (_, a) = call(&app, "POST", "/v1/learners", Some(learner("later", None))).await;
+        let (_, b) = call(&app, "POST", "/v1/learners", Some(learner("later", None))).await;
+        let apply = |who: &Value| json!({ "jobId": "job-support-agent", "learnerId": who["id"], "whyAudio": rec["id"], "shareSupport": false });
+        let (s, _) = call(&app, "POST", "/v1/applications", Some(apply(&a))).await;
+        assert_eq!(s, StatusCode::CREATED);
+        let (s, e) = call(&app, "POST", "/v1/applications", Some(apply(&b))).await;
+        assert_eq!(s, StatusCode::UNPROCESSABLE_ENTITY);
+        assert_eq!(e["error"]["code"], "audio_unknown");
+        assert_eq!(e["error"]["field"], "whyAudio");
     }
 }

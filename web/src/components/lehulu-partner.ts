@@ -4,6 +4,7 @@
 import { LitElement, html, nothing } from 'lit';
 import { base } from './styles';
 import { store, type Partner, type VouchRequest } from '../data/store';
+// <audio> cannot take a <label>, so aria-label names each player for screen readers.
 
 export class LehuluPartner extends LitElement {
   static styles = base;
@@ -36,8 +37,8 @@ export class LehuluPartner extends LitElement {
     await store.decideVouch(this._partner, r.learnerId, decision);
     this._status =
       decision === 'confirm'
-        ? `Confirmed. ${r.name}’s ID status is now “confirmed by partner”.`
-        : `Marked “I don’t know this person”. ${r.name} keeps learning and can choose another ID route.`;
+        ? `Confirmed. ${r.name || 'The learner'}’s ID status is now “confirmed by partner”.`
+        : `Marked “I don’t know this person”. ${r.name || 'The learner'} keeps learning and can choose another ID route.`;
     await this.load();
     this.renderRoot.querySelector<HTMLElement>('h2')?.focus();
   }
@@ -54,7 +55,10 @@ export class LehuluPartner extends LitElement {
         ? html`<p>No requests waiting. They appear here when a learner chooses “No document. A partner can vouch for me.”</p>`
         : html`<ul style="list-style:none;margin:0;padding:0;display:grid;gap:.6rem">
             ${this._reqs.map((r) => html`<li class="card" style="gap:.4rem">
-              <h3>${r.name} · ${r.phone}</h3>
+              <h3>${r.name || 'Name given by voice'} · ${r.phone}</h3>
+              ${r.nameAudio
+                ? html`<audio controls preload="none" src=${store.recordingUrl(r.nameAudio)} aria-label="Name, spoken by the learner"></audio>`
+                : nothing}
               <p class="meta">Asked on ${new Date(r.requestedAt).toLocaleString()}. No document attached.</p>
               <div class="row">
                 <button type="button" class="primary" @click=${() => this.decide(r, 'confirm')}>I know this person, confirm</button>

@@ -6,6 +6,7 @@ import { base } from './styles';
 import { NEEDS } from '../engine/flow';
 import { text } from '../engine/i18n';
 import { store, type EmployerApplication, type Job } from '../data/store';
+// <audio> cannot take a <label>, so aria-label names each player for screen readers.
 
 export class LehuluApplications extends LitElement {
   static styles = base;
@@ -48,8 +49,15 @@ export class LehuluApplications extends LitElement {
       <p role="status" class="status">${this._apps.length} applications</p>
       <ul style="list-style:none;margin:0;padding:0;display:grid;gap:.6rem">
         ${this._apps.map((a) => html`<li class="card" style="gap:.4rem">
-          <h3>${a.learnerName}</h3>
+          <h3>${a.learnerName || 'Name given by voice'}</h3>
+          ${a.learnerNameAudio
+            ? html`<audio controls preload="none" src=${store.recordingUrl(a.learnerNameAudio)} aria-label="Name, spoken by the learner"></audio>`
+            : nothing}
           ${a.why ? html`<p>“${a.why}”</p>` : nothing}
+          ${a.whyAudio
+            ? html`<p class="meta">Why they want this job, in their own voice:</p>
+                <audio controls preload="none" src=${store.recordingUrl(a.whyAudio)} aria-label="Voice answer: why they want this job"></audio>`
+            : nothing}
           ${a.supportRequested?.length
             ? html`<p><strong>Support requested:</strong></p>
                 <ul class="tags">${a.supportRequested.map((n) => html`<li class="tag">${text(NEEDS.needs.find((x) => x.id === n)?.request, 'en')}</li>`)}</ul>`
