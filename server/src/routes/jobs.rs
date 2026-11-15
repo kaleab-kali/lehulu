@@ -1,6 +1,7 @@
 //! Jobs with the support each one offers. `Accept: application/ld+json` returns schema.org JobPosting (Level 3).
 
 use crate::{
+    auth::EmployerAuth,
     domain::validate,
     error::{ApiError, ApiResult},
     routes::AppState,
@@ -25,12 +26,16 @@ pub struct Job {
     pub remote: bool,
     /// Same ids as a learner's support needs (flows/needs.json)
     pub support_offered: Vec<String>,
+    /// The employer that posted it (only they can read its applications).
+    pub employer_id: Option<String>,
 }
 
 #[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct NewJob {
     pub title: String,
+    /// Defaults to the signed-in employer's name.
+    #[serde(default)]
     pub org: String,
     pub city: Option<String>,
     #[serde(default)]
@@ -40,13 +45,14 @@ pub struct NewJob {
 }
 
 pub async fn all_jobs(st: &AppState) -> ApiResult<Vec<Job>> {
-    let rows: Vec<(String, String, String, Option<String>, bool)> = sqlx::query_as(
-        "SELECT id, title, org, city, remote FROM jobs ORDER BY created_at DESC, title",
+    type Row = (String, String, String, Option<String>, bool, Option<String>);
+    let rows: Vec<Row> = sqlx::query_as(
+        "SELECT id, title, org, city, remote, employer_id FROM jobs ORDER BY created_at DESC, title",
     )
     .fetch_all(&st.pool)
     .await?;
     let mut out = Vec::with_capacity(rows.len());
-    for (id, title, org, city, remote) in rows {
+    for (id, title, org, city, remote, employer_id) in rows {
         let support: Vec<(String,)> =
             sqlx::query_as("SELECT need FROM job_support WHERE job_id = ? ORDER BY need")
                 .bind(&id)
@@ -59,6 +65,7 @@ pub async fn all_jobs(st: &AppState) -> ApiResult<Vec<Job>> {
             city,
             remote,
             support_offered: support.into_iter().map(|(n,)| n).collect(),
+            employer_id,
         });
     }
     Ok(out)
@@ -96,15 +103,23 @@ pub async fn list_jobs(State(st): State<AppState>, headers: HeaderMap) -> ApiRes
     Ok(Json(jobs).into_response())
 }
 
-#[utoipa::path(post, path = "/v1/jobs", tag = "jobs", request_body = NewJob,
-    responses((status = 201, body = Job), (status = 422, body = crate::error::ErrorBody)))]
+#[utoipa::path(post, path = "/v1/jobs", tag = "jobs", request_body = NewJob, security(("bearer" = [])),
+    responses((status = 201, body = Job), (status = 401, body = crate::error::ErrorBody), (status = 422, body = crate::error::ErrorBody)))]
 pub async fn create_job(
     State(st): State<AppState>,
+    who: EmployerAuth,
     Json(j): Json<NewJob>,
 ) -> ApiResult<(StatusCode, Json<Job>)> {
-    // TODO(F13): require an employer access token (OAuth 2.0 client credentials).
     validate::required(&j.title, "title", "Enter a job title.")?;
-    validate::required(&j.org, "org", "Enter the organisation name.")?;
+    let org = if j.org.trim().is_empty() {
+        let (name,): (String,) = sqlx::query_as("SELECT name FROM employers WHERE id = ?")
+            .bind(&who.0)
+            .fetch_one(&st.pool)
+            .await?;
+        name
+    } else {
+        j.org.trim().to_string()
+    };
     for n in &j.support_offered {
         if !st.needs.contains(n) {
             return Err(ApiError::invalid(
@@ -116,13 +131,14 @@ pub async fn create_job(
     }
     let id = format!("job-{}", uuid::Uuid::new_v4());
     sqlx::query(
-        "INSERT INTO jobs (id, title, org, city, remote, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO jobs (id, title, org, city, remote, employer_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&id)
     .bind(j.title.trim())
-    .bind(j.org.trim())
-    .bind(&j.city)
+    .bind(&org)
+    .bind(j.city.as_deref().map(str::trim).filter(|c| !c.is_empty()))
     .bind(j.remote)
+    .bind(&who.0)
     .bind(chrono::Utc::now().to_rfc3339())
     .execute(&st.pool)
     .await?;

@@ -2,8 +2,13 @@
 //! outside speech service. The browser uploads the audio as soon as recording stops; answers then refer
 //! to it by id (`nameAudio`, `whyAudio`). A recording becomes owned by a learner when an answer uses it,
 //! and "delete my account" deletes the files.
+//!
+//! Who may play a recording: the learner who owns it; an employer, for the answer and spoken name in an
+//! application to their job; a partner, for the spoken name of a learner who asked them to confirm.
+//! A recording not used in any answer yet can be played by whoever holds its (unguessable) id.
 
 use crate::{
+    auth::{MaybeAuth, Principal},
     error::{ApiError, ApiResult},
     routes::AppState,
 };
@@ -46,6 +51,7 @@ fn parse_id(id: &str) -> ApiResult<String> {
     responses((status = 201, body = Uploaded), (status = 422, body = crate::error::ErrorBody)))]
 pub async fn upload(
     State(st): State<AppState>,
+    MaybeAuth(who): MaybeAuth,
     headers: HeaderMap,
     body: Bytes,
 ) -> ApiResult<(StatusCode, Json<Uploaded>)> {
@@ -90,13 +96,21 @@ pub async fn upload(
             "We could not save the recording. Your other answers are safe. Please try again.",
         ));
     }
-    sqlx::query("INSERT INTO media (id, mime, bytes, created_at) VALUES (?, ?, ?, ?)")
-        .bind(&id)
-        .bind(&mime)
-        .bind(body.len() as i64)
-        .bind(chrono::Utc::now().to_rfc3339())
-        .execute(&st.pool)
-        .await?;
+    // A signed-in learner owns the recording straight away; others are claimed by the answer that uses them.
+    let owner = match who {
+        Some(Principal::Learner(l)) => Some(l),
+        _ => None,
+    };
+    sqlx::query(
+        "INSERT INTO media (id, mime, bytes, learner_id, created_at) VALUES (?, ?, ?, ?, ?)",
+    )
+    .bind(&id)
+    .bind(&mime)
+    .bind(body.len() as i64)
+    .bind(owner)
+    .bind(chrono::Utc::now().to_rfc3339())
+    .execute(&st.pool)
+    .await?;
     let url = format!("/v1/media/{id}");
     Ok((StatusCode::CREATED, Json(Uploaded { id, url })))
 }
@@ -105,15 +119,25 @@ pub async fn upload(
     responses((status = 200, description = "The recording", content_type = "audio/webm"), (status = 404, body = crate::error::ErrorBody)))]
 pub async fn get(
     State(st): State<AppState>,
+    MaybeAuth(who): MaybeAuth,
     Path(id): Path<String>,
 ) -> ApiResult<impl IntoResponse> {
-    // TODO(F13): only the learner, and an employer or partner they chose, may play a recording.
     let id = parse_id(&id)?;
-    let row: Option<(String,)> = sqlx::query_as("SELECT mime FROM media WHERE id = ?")
-        .bind(&id)
-        .fetch_optional(&st.pool)
-        .await?;
-    let (mime,) = row.ok_or(ApiError::NotFound("recording"))?;
+    let row: Option<(String, Option<String>)> =
+        sqlx::query_as("SELECT mime, learner_id FROM media WHERE id = ?")
+            .bind(&id)
+            .fetch_optional(&st.pool)
+            .await?;
+    let (mime, owner) = row.ok_or(ApiError::NotFound("recording"))?;
+    if let Some(owner) = owner {
+        if !may_play(&st.pool, who.as_ref(), &id, &owner).await? {
+            return Err(if who.is_none() {
+                ApiError::Unauthorized
+            } else {
+                ApiError::Forbidden
+            });
+        }
+    }
     let bytes = tokio::fs::read(file_for(&st.cfg.media_dir, &id))
         .await
         .map_err(|_| ApiError::NotFound("recording"))?;
@@ -124,6 +148,42 @@ pub async fn get(
         ],
         bytes,
     ))
+}
+
+async fn may_play(
+    pool: &SqlitePool,
+    who: Option<&Principal>,
+    media_id: &str,
+    owner: &str,
+) -> ApiResult<bool> {
+    let found: Option<(i64,)> = match who {
+        None => None,
+        Some(Principal::Learner(l)) => return Ok(l == owner),
+        Some(Principal::Employer(e)) => {
+            sqlx::query_as(
+                "SELECT 1 FROM applications a JOIN jobs j ON j.id = a.job_id JOIN learners l ON l.id = a.learner_id
+                 WHERE j.employer_id = ? AND a.learner_id = ? AND (a.why_audio_path = ? OR l.name_audio = ?) LIMIT 1",
+            )
+            .bind(e)
+            .bind(owner)
+            .bind(media_id)
+            .bind(media_id)
+            .fetch_optional(pool)
+            .await?
+        }
+        Some(Principal::Partner(p)) => {
+            sqlx::query_as(
+                "SELECT 1 FROM vouches v JOIN learners l ON l.id = v.learner_id
+                 WHERE v.partner_id = ? AND v.learner_id = ? AND l.name_audio = ? LIMIT 1",
+            )
+            .bind(p)
+            .bind(owner)
+            .bind(media_id)
+            .fetch_optional(pool)
+            .await?
+        }
+    };
+    Ok(found.is_some())
 }
 
 /// Link a recording to the learner whose answer uses it. Fails with a plain error on `field` if the id
@@ -172,6 +232,23 @@ pub async fn delete_files_of(
         if let Err(e) = tokio::fs::remove_file(file_for(media_dir, &id)).await {
             tracing::warn!(error = %e, %id, "recording file was already gone");
         }
+    }
+    Ok(())
+}
+
+/// Delete recordings that no answer used, made before `before` (files and rows).
+pub async fn delete_unclaimed(pool: &SqlitePool, media_dir: &str, before: &str) -> ApiResult<()> {
+    let ids: Vec<(String,)> =
+        sqlx::query_as("SELECT id FROM media WHERE learner_id IS NULL AND created_at < ?")
+            .bind(before)
+            .fetch_all(pool)
+            .await?;
+    for (id,) in ids {
+        let _ = tokio::fs::remove_file(file_for(media_dir, &id)).await;
+        sqlx::query("DELETE FROM media WHERE id = ?")
+            .bind(&id)
+            .execute(pool)
+            .await?;
     }
     Ok(())
 }

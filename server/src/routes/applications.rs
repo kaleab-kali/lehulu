@@ -1,6 +1,8 @@
 //! Job applications. Support needs reach the employer ONLY when the learner said yes for that job.
+//! Learners apply as themselves (token); only the employer that posted a job can read its applications.
 
 use crate::{
+    auth::{EmployerAuth, LearnerAuth},
     domain::validate,
     error::{ApiError, ApiResult},
     routes::{learners, media, AppState},
@@ -17,7 +19,9 @@ use utoipa::ToSchema;
 #[serde(rename_all = "camelCase")]
 pub struct NewApplication {
     pub job_id: String,
-    pub learner_id: String,
+    /// Optional: taken from the learner's token. If sent, it must be the signed-in learner.
+    #[serde(default)]
+    pub learner_id: Option<String>,
     /// Required unless `whyAudio` is given.
     #[serde(default)]
     pub why: String,
@@ -41,6 +45,9 @@ pub struct EmployerApplication {
     pub learner_name: String,
     /// Play at this URL: the learner saying their name.
     pub learner_name_audio: Option<String>,
+    /// So the employer can contact the applicant. Applying means the learner agreed to this.
+    pub learner_phone: String,
+    pub created_at: String,
     pub why: Option<String>,
     /// Play at this URL: the answer said out loud.
     pub why_audio: Option<String>,
@@ -49,11 +56,17 @@ pub struct EmployerApplication {
 }
 
 #[utoipa::path(post, path = "/v1/applications", tag = "applications", request_body = NewApplication,
-    responses((status = 201, body = Created), (status = 422, body = crate::error::ErrorBody)))]
+    security(("bearer" = [])),
+    responses((status = 201, body = Created), (status = 401, body = crate::error::ErrorBody), (status = 422, body = crate::error::ErrorBody)))]
 pub async fn create_application(
     State(st): State<AppState>,
+    who: LearnerAuth,
     Json(a): Json<NewApplication>,
 ) -> ApiResult<(StatusCode, Json<Created>)> {
+    if a.learner_id.as_deref().is_some_and(|id| id != who.id) {
+        return Err(ApiError::Forbidden);
+    }
+    let learner_id = who.id;
     if a.why_audio.is_none() {
         validate::required(
             &a.why,
@@ -61,30 +74,35 @@ pub async fn create_application(
             "Write or say a short answer about why you want this job.",
         )?;
     }
-    learners::fetch(&st.pool, &a.learner_id).await?;
+    learners::fetch(&st, &learner_id).await?;
     let job: Option<(String,)> = sqlx::query_as("SELECT id FROM jobs WHERE id = ?")
         .bind(&a.job_id)
         .fetch_optional(&st.pool)
         .await?;
     job.ok_or(ApiError::NotFound("job"))?;
     let why_audio = match a.why_audio.as_deref() {
-        Some(m) => Some(media::claim(&st.pool, m, &a.learner_id, "whyAudio").await?),
+        Some(m) => Some(media::claim(&st.pool, m, &learner_id, "whyAudio").await?),
         None => None,
     };
     let id = uuid::Uuid::new_v4().to_string();
     sqlx::query("INSERT INTO applications (id, job_id, learner_id, why_text, why_audio_path, support_shared, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
         .bind(&id)
         .bind(&a.job_id)
-        .bind(&a.learner_id)
+        .bind(&learner_id)
         .bind(Some(a.why.trim()).filter(|w| !w.is_empty()))
         .bind(why_audio)
         .bind(a.share_support)
         .bind(chrono::Utc::now().to_rfc3339())
         .execute(&st.pool)
         .await?;
+    crate::webhook::notify(
+        &st,
+        "application.created",
+        serde_json::json!({ "applicationId": id, "jobId": a.job_id, "learnerId": learner_id }),
+    );
     learners::log(
         &st.pool,
-        Some(&a.learner_id),
+        Some(&learner_id),
         "learner",
         if a.share_support {
             "applied_shared_support"
@@ -97,30 +115,54 @@ pub async fn create_application(
 }
 
 #[utoipa::path(get, path = "/v1/jobs/{id}/applications", tag = "applications", params(("id" = String, Path)),
-    responses((status = 200, body = [EmployerApplication])))]
+    security(("bearer" = [])),
+    responses((status = 200, body = [EmployerApplication]), (status = 401, body = crate::error::ErrorBody), (status = 403, body = crate::error::ErrorBody)))]
 pub async fn list_for_job(
     State(st): State<AppState>,
+    who: EmployerAuth,
     Path(job_id): Path<String>,
 ) -> ApiResult<Json<Vec<EmployerApplication>>> {
-    // TODO(F13): require the employer token that owns this job.
+    let owner: Option<(Option<String>,)> =
+        sqlx::query_as("SELECT employer_id FROM jobs WHERE id = ?")
+            .bind(&job_id)
+            .fetch_optional(&st.pool)
+            .await?;
+    match owner {
+        None => return Err(ApiError::NotFound("job")),
+        Some((Some(e),)) if e == who.0 => {}
+        Some(_) => return Err(ApiError::Forbidden),
+    }
     type Row = (
         String,
         String,
         String,
         Option<String>,
+        String,
+        String,
         Option<String>,
         Option<String>,
         bool,
     );
     let rows: Vec<Row> = sqlx::query_as(
-        "SELECT a.id, a.learner_id, l.name, l.name_audio, a.why_text, a.why_audio_path, a.support_shared
+        "SELECT a.id, a.learner_id, l.name, l.name_audio, l.phone, a.created_at, a.why_text, a.why_audio_path, a.support_shared
          FROM applications a JOIN learners l ON l.id = a.learner_id WHERE a.job_id = ? ORDER BY a.created_at",
     )
     .bind(&job_id)
     .fetch_all(&st.pool)
     .await?;
     let mut out = Vec::new();
-    for (id, learner_id, learner_name, name_audio, why, why_audio, shared) in rows {
+    for (
+        id,
+        learner_id,
+        learner_name,
+        name_audio,
+        learner_phone,
+        created_at,
+        why,
+        why_audio,
+        shared,
+    ) in rows
+    {
         let support_requested = if shared {
             let needs: Vec<(String,)> =
                 sqlx::query_as("SELECT need FROM support_needs WHERE learner_id = ? ORDER BY need")
@@ -135,6 +177,8 @@ pub async fn list_for_job(
             id,
             learner_name,
             learner_name_audio: name_audio.map(|m| format!("/v1/media/{m}")),
+            learner_phone,
+            created_at,
             why,
             why_audio: why_audio.map(|m| format!("/v1/media/{m}")),
             support_requested,

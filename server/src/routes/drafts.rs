@@ -1,4 +1,6 @@
-//! Autosave after every question and "continue later". Drafts never expire while in use (no time limits).
+//! Autosave after every question and "continue later". Drafts never expire while in use (no time limits);
+//! the retention job removes drafts untouched for RETENTION_DAYS. The resume code is the only key, so it is
+//! 8 characters long (about 10^12 possibilities).
 
 use crate::{
     error::{ApiError, ApiResult},
@@ -22,7 +24,7 @@ pub struct Draft {
     /// Answers so far, as entered (object keyed by step id)
     #[schema(value_type = Object)]
     pub answers: Value,
-    /// If given, a "continue later" link is sent to this phone by SMS
+    /// If given, a "continue later" link (`?resume=CODE`) is sent to this phone by SMS (at most 3 per draft)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub send_link_to: Option<String>,
 }
@@ -37,7 +39,7 @@ fn new_code() -> String {
     // No 0/O/1/I so codes are easy to read aloud and type.
     const ALPHABET: &[u8] = b"23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
     let mut rng = rand::thread_rng();
-    (0..6)
+    (0..8)
         .map(|_| ALPHABET[rng.gen_range(0..ALPHABET.len())] as char)
         .collect()
 }
@@ -99,10 +101,25 @@ async fn upsert(st: &AppState, code: &str, d: &Draft) -> ApiResult<()> {
     .await?;
     if let Some(phone) = &d.send_link_to {
         let phone = crate::domain::validate::et_phone(phone)?;
+        // Limit texts per draft so "continue later" cannot be used to message strangers.
+        let res = sqlx::query(
+            "UPDATE drafts SET sms_sent = sms_sent + 1 WHERE resume_code = ? AND sms_sent < 3",
+        )
+        .bind(code)
+        .execute(&st.pool)
+        .await?;
+        if res.rows_affected() == 0 {
+            return Err(ApiError::invalid(
+                "too_many_texts",
+                "phone",
+                format!("We already texted your code. You can also write it down: {code}."),
+            ));
+        }
         st.sms.send(
             &phone,
             &format!(
-                "Lehulu: continue your sign-up any time with code {code}. There is no time limit."
+                "Lehulu: continue your sign-up any time: {}/?resume={code} (code {code}). There is no time limit.",
+                st.cfg.public_url
             ),
         );
     }
