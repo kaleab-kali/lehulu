@@ -12,13 +12,33 @@ tag. A learner signs up one question at a time, by typing or by voice, in Amhari
 ID document. Instead of asking about disability, it asks how the learner uses their phone, adapts every screen to
 that answer, and (only if the learner agrees) lets the host platform adapt too.
 
-| Picture choices and read-aloud | Amharic, answered by voice | Account ready, no ID needed |
-|---|---|---|
-| ![ID question as large picture tiles](docs/screenshots/signup-pictures.jpg) | ![Amharic name question with a large voice button](docs/screenshots/amharic-voice-phone.jpg) | ![Account ready, ID waiting for the partner, the site adapts](docs/screenshots/signup-done.jpg) |
+## Screens
 
-| Partner confirms a learner with no ID | Employer reads an application | Inside the Savanna dashboard |
+**Inside Savanna.** The same script tag on all three ALX Savanna starter pages, in Savanna's colours:
+
+| Learner dashboard (paced) | Learner dashboard (self-paced) | Lesson page |
 |---|---|---|
-| ![Partner screen](docs/screenshots/partner.jpg) | ![Employer screen](docs/screenshots/employer.jpg) | ![Lehulu inside Savanna](docs/screenshots/inside-savanna.jpg) |
+| ![Lehulu sign-up inside the paced Savanna dashboard](docs/screenshots/savanna-dashboard.jpg) | ![Lehulu sign-up inside the self-paced Savanna dashboard](docs/screenshots/savanna-self-paced.jpg) | ![Lehulu sign-up inside the Savanna lesson page](docs/screenshots/savanna-lesson.jpg) |
+
+**Sign-up**, one question at a time:
+
+| How do you use your phone? | A plain error, read out | Picture choices, no ID needed |
+|---|---|---|
+| ![Ways of using the phone](docs/screenshots/signup-ways.jpg) | ![Phone number error with an example](docs/screenshots/signup-error.jpg) | ![ID question as picture tiles](docs/screenshots/signup-pictures.jpg) |
+
+| Check your answers | Account ready | Amharic, by voice, on a phone |
+|---|---|---|
+| ![Review with a Change button on every answer](docs/screenshots/signup-review.jpg) | ![Account ready, ID waiting for the partner, the site adapts](docs/screenshots/signup-done.jpg) | ![Amharic name question with a large voice button](docs/screenshots/phone-amharic-voice.jpg) |
+
+**Jobs, partner and employer:**
+
+| Jobs and my profile | Application sent | Partner sign-in |
+|---|---|---|
+| ![Jobs sorted by support, and the profile](docs/screenshots/jobs-profile.jpg) | ![Application sent](docs/screenshots/apply-sent.jpg) | ![One-tap test accounts for partners](docs/screenshots/partner-sign-in.jpg) |
+
+| Partner confirms or registers a learner | Employer posts jobs and reads applications | On a page with no other styles |
+|---|---|---|
+| ![Partner screen](docs/screenshots/partner.jpg) | ![Employer screen](docs/screenshots/employer.jpg) | ![The sign-up alone on a blank page](docs/screenshots/blank-page.jpg) |
 
 ## How it works for each learner
 
