@@ -3,12 +3,26 @@
 Track 1, Accessible onboarding · Digital Bridge Accessibility Hackathon 2026.
 Team: _add names_ · Co-designer: _add name_
 
+![Lehulu front page](docs/screenshots/01-home.jpg)
+
 ## What it does
 
 Lehulu is a sign-up, profile and job-application module that any learning or job platform adds with one script
 tag. A learner signs up one question at a time, by typing or by voice, in Amharic or English, without needing an
 ID document. Instead of asking about disability, it asks how the learner uses their phone, adapts every screen to
 that answer, and (only if the learner agrees) lets the host platform adapt too.
+
+| Sign-up adapts to the learner | Amharic, by voice, on a phone | Success, and the site adapts |
+|---|---|---|
+| ![Support step with pre-ticked choices and Prefer not to say](docs/screenshots/03-signup-support.jpg) | ![Amharic name question with a large voice button](docs/screenshots/11-phone-amharic-pictures.jpg) | ![Account ready, ID waiting for partner, site adapted](docs/screenshots/04-signup-done.jpg) |
+
+| Jobs sorted by the support you need | Partner (AAAPD) | Employer |
+|---|---|---|
+| ![Jobs and profile](docs/screenshots/05-jobs.jpg) | ![Partner requests and register a learner](docs/screenshots/07-partner.jpg) | ![Employer posts a job and reads an application](docs/screenshots/08-employer.jpg) |
+
+Inside the real Savanna page, in Savanna's colours:
+
+![Lehulu inside the ALX Savanna dashboard](docs/screenshots/09-savanna.jpg)
 
 ## The main task we tested
 
@@ -23,43 +37,45 @@ cd lehulu
 docker compose up --build
 ```
 
-Open http://localhost:8080. The first build takes 5–10 minutes. `docker compose down -v` deletes all data;
-`PORT=8090 docker compose up` if 8080 is taken.
+Open **http://localhost:8080**. The front page links to every part; nothing else needs setting up. The first build
+takes 5–10 minutes. `docker compose down -v` deletes all data; `PORT=8090 docker compose up` if 8080 is taken.
 
-Docker Compose starts in **demo mode** (`DEMO_MODE=true`) so everything can be tried without a phone:
+**This runs as a test system.** Two things in Lehulu normally need the outside world: a learner signing in on a
+new phone gets a code by SMS, and partners and employers log in with a password their administrator gives them.
+A laptop has neither, so on the test system the code is shown on screen, and the partner and employer screens
+offer one-tap test accounts (**Continue as AAAPD**, **Continue as Lideta Tech**, …). Nothing needs switching.
+To run it for real, set `DEMO_MODE=false` and connect an SMS provider (see [Going live](#going-live)); the test
+accounts and on-screen codes then disappear.
 
-| Page | What to do |
+| Page | What it is |
 |---|---|
-| http://localhost:8080/ | Sign up (demo host page) |
-| http://localhost:8080/blank.html | The same module on an empty page with no host CSS |
-| http://localhost:8080/jobs/ | Jobs with the private support filter; **My profile** (sign in, change, download, delete) |
-| http://localhost:8080/partner/ | Partner screen. Sign in with client ID `aaapd`, secret `aaapd-demo` |
-| http://localhost:8080/employer/ | Employer screen. Sign in with `afro-connect` / `afro-connect-demo` (also `lideta-tech`, `merkato-supply`, `bole-media`) |
-| http://localhost:8080/docs | Swagger UI for the API |
-| http://localhost:8080/dev/sms | SMS simulator: the texts a real gateway would send (demo mode only) |
+| http://localhost:8080/ | Front page: what Lehulu is, and a card for each part |
+| http://localhost:8080/signup/ | Learner sign-up |
+| http://localhost:8080/jobs/ | Jobs sorted by your support needs, and **My profile** (sign in, change, download, delete) |
+| http://localhost:8080/partner/ | Partner screen (one tap: **Continue as AAAPD**) |
+| http://localhost:8080/employer/ | Employer screen (one tap: **Continue as Afro Connect**, or another employer) |
+| http://localhost:8080/blank.html | The module alone on an empty page with no host styles |
+| http://localhost:8080/docs | Interactive API documentation |
 | http://localhost:8080/savanna/ | Inside the real Savanna pages, after `bash scripts/import-savanna-starter.sh` |
-
-In demo mode, sign-in codes also appear on screen. In production (`DEMO_MODE=false`) they only go by SMS, demo
-secrets stop working, and `/dev/sms` does not exist.
 
 ### Walk through it
 
-1. **Sign up** at `/`. Choose a language, then **How do you use your phone?** (for example *I listen*). Give your
-   name by typing or with **Answer by voice**. Try `123` as the phone number to see an error, then `0911 234 567`.
-   For ID choose **No document. A partner can vouch for me** → **AAAPD**. Support is pre-ticked from your first
-   answer; **Prefer not to say** is just as easy. Say yes to **Can the learning site adapt to you?** After
-   **Create my account**, the host page shows what it changed.
-2. **Partner** at `/partner/`: sign in, play the learner's spoken name, **I know this person, confirm**. Or
-   **Register a learner who is with you**: the learner gets an SMS code and the account exists only once they
-   enter it.
-3. **Jobs** at `/jobs/`: the filter is set from your support needs and runs on the phone. Open a job and apply by
-   text or voice; choose whether *this employer only* sees your support needs.
-4. **Employer** at `/employer/`: sign in as the employer of that job. Post a job with the support it offers,
-   and read applications (text, voice, phone number, and support requests only when shared).
-5. **Another device**: clear the browser, open **My profile**, sign in with your phone number and the code. On a
-   shared phone you choose your account. Change any answer, **Download my data**, or **Delete my account**.
-6. **Continue later**: stop half-way, press **Continue later**, and open the link from the SMS
-   (`/?resume=CODE`) on any phone. Reloading or losing signal loses nothing.
+1. **Sign up** at `/signup/`. Choose a language, then **How do you use your phone?** (for example *I listen* and
+   *Big and simple*). Give your name by typing or with **Answer by voice**. Try `123` as the phone number to see an
+   error, then `0911 234 567`. For ID choose **No document. A partner can vouch for me** → **AAAPD**. Support is
+   pre-ticked from your first answer; **Prefer not to say** is just as easy. Say yes to **Can the learning site
+   adapt to you?** After **Create my account**, the card and the page both say what changed.
+2. **Partner** at `/partner/`: **Continue as AAAPD**, play the learner's spoken name if they gave it by voice, and
+   press **I know this person, confirm**. Or **Register a learner who is with you**: the learner gets a code and the
+   account exists only once they enter it.
+3. **Jobs** at `/jobs/`: jobs offering the support you need come first; the filter runs on the phone. Open a job and
+   apply by text or voice, and choose whether *this employer only* sees your support needs.
+4. **Employer** at `/employer/`: continue as the employer of that job (Junior web developer is Lideta Tech). Post a
+   job with the support it offers, and read applications.
+5. **Another phone**: open **My profile** in a private window, sign in with your phone number and the code shown on
+   screen. On a shared phone you choose your account. Change any answer, **Download my data**, or **Delete my account**.
+6. **Continue later**: stop half-way and press **Continue later**. The SMS has a link (`/signup/?resume=CODE`) that
+   reopens your answers on any phone. Reloading or losing signal loses nothing.
 
 ## Install, Level 1: one script tag
 
@@ -186,9 +202,9 @@ Measured with Chrome's Slow 3G profile (400 kbit/s, high latency), empty cache, 
 | Page | First question usable | Transferred |
 |---|---|---|
 | `/blank.html` (module only) | 8.6 s | 112 KB |
-| `/` (demo host page) | 8.5 s | 116 KB |
+| `/signup/` (sign-up page) | 8.5 s | 116 KB |
 
-`lehulu.js` is 37 KB compressed (the server sends gzip or brotli). 74 KB is the Noto Sans Ethiopic font, cached
+`lehulu.js` is about 40 KB compressed (the server sends gzip or brotli). 74 KB is the Noto Sans Ethiopic font, cached
 after the first visit. Videos and recordings never load until tapped; in "low data" mode sign clips wait for a tap.
 
 Offline: every answer is kept on the phone as it is given, so a reload or a lost signal loses nothing, and voice
@@ -222,13 +238,26 @@ For 3,000 learners: one small VPS (1 vCPU, 1 GB RAM, 20 GB disk), about **US$5�
 The only variable cost is the SMS gateway (sign-in codes and "continue later" links), billed per message by the
 chosen Ethiopian provider. Back up with `lehulu backup data/backup.db` plus the `MEDIA_DIR` folder and the key file.
 
+## Going live
+
+For ALX engineers putting Lehulu on Savanna for real, after the test system:
+
+1. In `.env`: `DEMO_MODE=false`, `ALLOWED_ORIGINS=https://savanna.alxafrica.com` (your site), `PUBLIC_URL` (where
+   Lehulu is served), and `DATA_KEY` (`openssl rand -hex 32`).
+2. Connect an SMS provider in `server/src/adapters/sms.rs`, so sign-in codes and "continue later" links are texted.
+3. Give each partner and employer their own login: `lehulu create-client partner aaapd "AAAPD"` prints an
+   organisation ID and password, shown once.
+4. Back up `data/` (database, recordings, key) with `lehulu backup`.
+
+With `DEMO_MODE=false` the test accounts stop working, codes are never shown on screen, and `/dev/sms` is gone.
+
 ## Configuration
 
 Server environment variables (see [`.env.example`](.env.example)):
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DEMO_MODE` | `false` (`true` in Docker Compose) | Demo sign-ins, codes on screen, `/dev/sms` |
+| `DEMO_MODE` | `false` (`true` in Docker Compose) | Test system: one-tap test accounts, codes on screen, `/dev/sms` |
 | `ALLOWED_ORIGINS` | empty | Sites allowed to call the API from the browser (comma-separated) |
 | `PUBLIC_URL` | `http://localhost:8080` | Used in SMS links |
 | `DATA_KEY` / `KEY_FILE` | empty / `data/lehulu.key` | Key that encrypts ID numbers |
@@ -278,7 +307,7 @@ docs/     ARCHITECTURE.md, FEATURES.md, CONFORMANCE.md, RECORDING.md
 
 ## Finished and not finished
 
-**Finished:** everything in the walkthrough above, with automated tests (25 Rust, 8 unit, and 9 end-to-end journeys each
+**Finished:** everything in the walkthrough above, with automated tests (26 Rust, 8 unit, and 10 end-to-end journeys each
 run on a desktop and a phone viewport, in demo mode and against the server). Status per feature: [docs/FEATURES.md](docs/FEATURES.md).
 
 **Not finished:**

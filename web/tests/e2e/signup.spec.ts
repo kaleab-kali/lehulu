@@ -14,14 +14,16 @@ async function noSeriousIssues(page: Page, where: string) {
 const flow = (page: Page) => page.locator('lehulu-signup');
 const next = (page: Page) => flow(page).getByRole('button', { name: /^(Next|Create my account|Save)/ }).click();
 
-/** OAuth client credentials with the demo secret (`<id>-demo`), keyboard only. */
-async function staffSignIn(page: Page, id: string) {
+/** Sign in with an organisation ID and the test password (`<id>-demo`), as a real partner or employer would. */
+async function staffSignIn(page: Page, id: string, password = `${id}-demo`) {
   const form = page.locator('lehulu-staff-sign-in');
-  await form.getByLabel('Client ID').fill(id);
-  await form.getByLabel('Client secret').fill(`${id}-demo`);
-  await form.getByLabel('Client secret').press('Enter');
+  if (!(await form.getByLabel('Organisation ID').isVisible())) await form.getByText('Sign in with an organisation ID instead').click();
+  await form.getByLabel('Organisation ID').fill(id);
+  await form.getByLabel('Password').fill(password);
+  await form.getByLabel('Password').press('Enter');
 }
-const partnerSignIn = (page: Page) => staffSignIn(page, 'aaapd');
+/** The one-tap test account a visitor sees first. */
+const partnerSignIn = (page: Page) => page.locator('lehulu-staff-sign-in').getByRole('button', { name: 'Continue as AAAPD' }).click();
 
 // Seeded jobs and the employer that posted each (server/seed/jobs.json).
 const EMPLOYER_OF: Record<string, string> = {
@@ -32,7 +34,7 @@ const EMPLOYER_OF: Record<string, string> = {
 };
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('./');
+  await page.goto('signup/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 });
@@ -127,13 +129,11 @@ test('@a11y sign up with no kebele ID, partner vouches, apply to a job', async (
 test('@a11y employer signs in and posts a job with the support it offers', async ({ page }) => {
   await page.goto('employer/');
   await noSeriousIssues(page, 'employer sign-in');
-  // A wrong secret: a plain error, announced, focus on the field.
+  // A wrong password: a plain error, announced, focus on the field.
   const form = page.locator('lehulu-staff-sign-in');
-  await form.getByLabel('Client ID').fill('afro-connect');
-  await form.getByLabel('Client secret').fill('wrong');
-  await form.getByRole('button', { name: 'Sign in' }).click();
+  await staffSignIn(page, 'afro-connect', 'wrong');
   await expect(form.getByRole('alert')).toContainText('do not match');
-  await expect(form.getByLabel('Client secret')).toBeFocused();
+  await expect(form.getByLabel('Password')).toBeFocused();
   await staffSignIn(page, 'afro-connect');
   await expect(page.locator('lehulu-employer').getByRole('heading', { name: 'Signed in as Afro Connect.' })).toBeFocused();
   const f = flow(page);
@@ -154,10 +154,16 @@ test('@a11y employer signs in and posts a job with the support it offers', async
 });
 
 /** Press Tab until `target` has focus (keyboard only, no clicks). */
-async function tabTo(page: Page, target: ReturnType<Page['locator']>, max = 25) {
-  for (let k = 0; k < max; k++) {
-    if (await target.evaluate((el) => el.matches(':focus')).catch(() => false)) return;
-    await page.keyboard.press('Tab');
+async function tabTo(page: Page, target: ReturnType<Page['locator']>, max = 8) {
+  const focused = () => target.evaluate((el) => el.matches(':focus')).catch(() => false);
+  // A keyboard user goes forward with Tab or back with Shift+Tab, whichever is shorter.
+  for (const key of ['Tab', 'Shift+Tab']) {
+    for (let k = 0; k < max; k++) {
+      if (await focused()) return;
+      await page.keyboard.press(key);
+    }
+    if (await focused()) return;
+    for (let k = 0; k < max; k++) await page.keyboard.press(key === 'Tab' ? 'Shift+Tab' : 'Tab');
   }
   await expect(target).toBeFocused();
 }

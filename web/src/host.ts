@@ -95,4 +95,5 @@ export function adaptPage(p: Preferences, o: AdaptOptions = {}) {
   note.append(h, ul, small);
   const where = document.querySelector(o.noteIn ?? 'main') ?? document.body;
   where.prepend(note);
+  note.style.margin = o.noteIn ? '0' : note.style.margin;
 }

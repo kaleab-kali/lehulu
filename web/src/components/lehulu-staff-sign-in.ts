@@ -3,14 +3,17 @@
 
 import { LitElement, html, nothing } from 'lit';
 import { base } from './styles';
-import { FieldError, store, useApiBase, type StaffKind } from '../data/store';
+import { FieldError, store, useApiBase, type Partner, type StaffKind } from '../data/store';
+import { icon } from '../engine/icons';
 import { langOf, words } from '../engine/screens';
 import type { Lang } from '../engine/types';
 
 export class LehuluStaffSignIn extends LitElement {
   static styles = base;
-  static properties = { kind: { type: String }, _lang: { state: true }, _error: { state: true }, _field: { state: true }, _busy: { state: true } };
+  static properties = { kind: { type: String }, _lang: { state: true }, _error: { state: true }, _field: { state: true }, _busy: { state: true }, _tests: { state: true } };
   declare kind: StaffKind;
+  /** Test organisations (test system only): one tap instead of typing an ID and password. */
+  declare _tests: Partner[];
   declare _lang: Lang;
   declare _error: string;
   declare _field: 'clientId' | 'secret' | '';
@@ -23,12 +26,29 @@ export class LehuluStaffSignIn extends LitElement {
     this._error = '';
     this._field = '';
     this._busy = false;
+    this._tests = [];
   }
 
   connectedCallback() {
     super.connectedCallback();
     useApiBase(this);
     this._lang = langOf(this);
+    void store.testAccounts(this.kind).then((t) => (this._tests = t));
+  }
+
+  private async signIn(id: string, secret: string) {
+    this._busy = true;
+    try {
+      const s = await store.staffSignIn(this.kind, id, secret);
+      this.dispatchEvent(new CustomEvent('lehulu:staff-signed-in', { detail: { kind: s.kind, id: s.id, name: s.name }, bubbles: true, composed: true }));
+    } finally {
+      this._busy = false;
+    }
+  }
+
+  private tryAs(org: Partner) {
+    // Test organisations use the published test password `<id>-demo` (accepted only on a test system).
+    void this.signIn(org.id, `${org.id}-demo`).catch((e: Error) => (this._error = e.message));
   }
 
   private async submit(e: Event) {
@@ -41,15 +61,11 @@ export class LehuluStaffSignIn extends LitElement {
     if (!id.trim() || !secret.trim()) {
       return this.fail(w.staffRequired, id.trim() ? 'secret' : 'clientId');
     }
-    this._busy = true;
     try {
-      const s = await store.staffSignIn(this.kind, id, secret);
-      this.dispatchEvent(new CustomEvent('lehulu:staff-signed-in', { detail: { kind: s.kind, id: s.id, name: s.name }, bubbles: true, composed: true }));
+      await this.signIn(id, secret);
     } catch (err) {
       const f = err instanceof FieldError ? err : new FieldError(w.staffRequired);
       await this.fail(f.message, f.field === 'clientId' ? 'clientId' : 'secret');
-    } finally {
-      this._busy = false;
     }
   }
 
@@ -64,8 +80,7 @@ export class LehuluStaffSignIn extends LitElement {
     const w = words(this._lang);
     const bad = (f: string) => (this._error && this._field === f ? 'true' : nothing);
     const described = (f: string) => (this._error && this._field === f ? 'staff-err' : nothing);
-    return html`<section class="card" lang=${this._lang} aria-labelledby="staff-h">
-      <h2 id="staff-h" tabindex="-1">${this.kind === 'partner' ? w.partnerSignIn : w.employerSignIn}</h2>
+    const form = html`
       <p class="hint">${w.staffIntro}</p>
       <form @submit=${this.submit} novalidate style="display:grid;gap:.9rem">
         <div style="display:grid;gap:.35rem">
@@ -79,8 +94,31 @@ export class LehuluStaffSignIn extends LitElement {
             aria-invalid=${bad('secret')} aria-describedby=${described('secret')} />
         </div>
         ${this._error ? html`<p id="staff-err" class="error" role="alert">${this._error}</p>` : nothing}
-        <button type="submit" class="primary" aria-disabled=${this._busy ? 'true' : nothing}>${w.verify}</button>
-      </form>
+        <button type="submit" class=${this._tests.length ? '' : 'primary'} aria-disabled=${this._busy ? 'true' : nothing}>${w.verify}</button>
+      </form>`;
+    const title = this.kind === 'partner' ? w.partnerSignIn : w.employerSignIn;
+    if (!this._tests.length) {
+      return html`<section class="card" lang=${this._lang} aria-labelledby="staff-h">
+        <h2 id="staff-h" tabindex="-1">${title}</h2>${form}</section>`;
+    }
+    const [first, ...others] = this._tests;
+    return html`<section class="card" lang=${this._lang} aria-labelledby="staff-h">
+      <h2 id="staff-h" tabindex="-1">${title}</h2>
+      <div class="code">
+        <strong style="font-size:1.1rem;letter-spacing:0">${w.tryTitle}</strong>
+        <small>${w.tryIntro}</small>
+      </div>
+      <button type="button" class="primary" aria-disabled=${this._busy ? 'true' : nothing} @click=${() => this.tryAs(first)}>
+        ${icon(this.kind === 'partner' ? 'users' : 'building')} ${w.continueAs(first.name)}
+      </button>
+      ${others.length
+        ? html`<div class="row">${others.map((o) => html`<button type="button" class="small" @click=${() => this.tryAs(o)}>${w.continueAs(o.name)}</button>`)}</div>`
+        : nothing}
+      ${this._error && !this._field ? html`<p class="error" role="alert">${this._error}</p>` : nothing}
+      <details class="fold" ?open=${Boolean(this._field)}>
+        <summary>${w.ownAccount}</summary>
+        ${form}
+      </details>
     </section>`;
   }
 }

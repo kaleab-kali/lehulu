@@ -131,6 +131,8 @@ export interface DataStore {
   /** Signs in on success; for a shared phone, returns the accounts to choose from. */
   verifyCode(phone: string, code: string, learnerId?: string): Promise<Verified>;
   staffSignIn(kind: StaffKind, clientId: string, secret: string): Promise<StaffSession>;
+  /** On a test system only: organisations a visitor can try with one click. Empty on a real system. */
+  testAccounts(kind: StaffKind): Promise<Partner[]>;
   listJobs(): Promise<Job[]>;
   postJob(j: NewJob): Promise<Job>;
   apply(a: NewApplication): Promise<{ id: string }>;
@@ -242,6 +244,10 @@ class ApiStore implements DataStore {
     const s: StaffSession = { kind, id, name: t.name, token: t.access_token };
     staff.set(s);
     return s;
+  }
+  async testAccounts(kind: StaffKind) {
+    const t = await this.call<{ partners: Partner[]; employers: Partner[] }>('GET', '/trial').catch(() => null);
+    return (kind === 'partner' ? t?.partners : t?.employers) ?? [];
   }
   listJobs() { return this.call<Job[]>('GET', '/jobs'); }
   postJob(j: NewJob) { return this.call<Job>('POST', '/jobs', j, 'employer'); }
@@ -434,6 +440,9 @@ class LocalStore implements DataStore {
     const s: StaffSession = { kind, id: org.id, name: org.name, token: 'demo' };
     staff.set(s);
     return s;
+  }
+  async testAccounts(kind: StaffKind) {
+    return (kind === 'partner' ? seedPartners : seedEmployers) as Partner[];
   }
   async listJobs() { return this.db().jobs; }
   async postJob(j: NewJob) {

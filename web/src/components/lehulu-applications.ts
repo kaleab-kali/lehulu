@@ -3,6 +3,7 @@
 
 import { LitElement, html, nothing } from 'lit';
 import { base } from './styles';
+import { icon } from '../engine/icons';
 import { NEEDS } from '../engine/flow';
 import { text } from '../engine/i18n';
 import { day, langOf, words } from '../engine/screens';
@@ -97,20 +98,34 @@ export class LehuluApplications extends LitElement {
     if (!this._me) {
       return html`<lehulu-staff-sign-in kind="employer" lang=${lang}></lehulu-staff-sign-in>`;
     }
+    const shared = this._apps.filter((a) => a.supportRequested?.length).length;
     return html`<section class="card" lang=${lang} aria-labelledby="a-h">
       <h2 id="a-h">${w.appsTitle}</h2>
+      <div class="stats">
+        <div class="stat"><span class="n">${this._jobs.length}</span><span class="l">${w.jobsN}</span></div>
+        <div class="stat accent"><span class="n">${this._apps.length}</span><span class="l">${w.appsN}</span></div>
+        <div class="stat"><span class="n">${shared}</span><span class="l">${w.sharedN}</span></div>
+      </div>
       ${this._jobs.length === 0
-        ? html`<p>${w.noJobs}</p>`
+        ? html`<div class="empty">${icon('briefcase')}<p>${w.noJobs}</p></div>`
         : html`<label class="field-label" for="job">${w.job}</label>
-            <select id="job" @change=${async (e: Event) => { this._job = (e.target as HTMLSelectElement).value; await this.load(); }}>
-              ${this._jobs.map((j) => html`<option value=${j.id} ?selected=${j.id === this._job}>${j.title}</option>`)}
-            </select>
-            <div class="row"><button type="button" class="small" @click=${() => this.load()}>${w.refresh}</button></div>
-            <p role="status" class="status">${w.count(this._apps.length)}</p>`}
+            <div class="row">
+              <select id="job" style="flex:1;min-width:12rem" @change=${async (e: Event) => { this._job = (e.target as HTMLSelectElement).value; await this.load(); }}>
+                ${this._jobs.map((j) => html`<option value=${j.id} ?selected=${j.id === this._job}>${j.title}</option>`)}
+              </select>
+              <button type="button" class="small" @click=${() => this.load()}>${w.refresh}</button>
+            </div>
+            <p role="status" class="status">${w.count(this._apps.length)}</p>
+            ${this._apps.length === 0 ? html`<div class="empty">${icon('inbox')}<p>${w.noApps}</p></div>` : nothing}`}
       ${this._error ? html`<p class="error" role="alert">${this._error}</p>` : nothing}
       <ul style="list-style:none;margin:0;padding:0;display:grid;gap:.6rem">
         ${this._apps.map((a) => html`<li class="card" style="gap:.4rem">
-          <h3>${a.learnerName || w.voiceName}</h3>
+          <div class="head">
+            <h3>${a.learnerName || w.voiceName}</h3>
+            ${a.supportRequested?.length
+              ? html`<span class="pill ok">${w.sharedPill}</span>`
+              : html`<span class="pill">${icon('lock')} ${w.privatePill}</span>`}
+          </div>
           ${this.player(a.learnerNameAudio, w.nameAudio)}
           <p class="meta">${w.applied(day(a.createdAt, lang))} ${w.contact} <a href="tel:${a.learnerPhone}">${a.learnerPhone}</a></p>
           ${a.why ? html`<p>“${a.why}”</p>` : nothing}

@@ -3,6 +3,7 @@
 
 import { LitElement, html } from 'lit';
 import { base } from './styles';
+import { icon } from '../engine/icons';
 import { staff, useApiBase, type StaffSession } from '../data/store';
 import { langOf, words } from '../engine/screens';
 import type { Lang } from '../engine/types';
@@ -46,7 +47,7 @@ export class LehuluEmployer extends LitElement {
     }
     return html`<div style="display:grid;gap:1.25rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,28rem),1fr));align-items:start" lang=${this._lang}>
       <div class="row" style="grid-column:1/-1">
-        <h2 id="e-h" tabindex="-1" style="font-size:1.1rem">${w.signedInAs(this._me.name)}</h2>
+        <h2 id="e-h" tabindex="-1" class="pill" style="font-size:1rem;min-height:44px;padding:0 1rem;background:var(--bg)">${icon('building')} ${w.signedInAs(this._me.name)}</h2>
         <button type="button" class="small" @click=${this.signOut}>${w.signOut}</button>
       </div>
       <lehulu-signup flow="employer" lang=${this._lang}></lehulu-signup>

@@ -89,6 +89,7 @@ pub fn router(state: AppState) -> Router {
     let cors = api_cors(&state.cfg.allowed_origins);
     let api = Router::new()
         .route("/flows/{id}", get(flows::get_flow))
+        .route("/trial", get(dev::trial))
         .route("/drafts", post(drafts::create_draft))
         .route(
             "/drafts/{code}",
@@ -768,6 +769,15 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn trial_system_lists_its_test_organisations() {
+        let app = app().await;
+        let (s, v) = call(&app, "GET", "/v1/trial", None).await;
+        assert_eq!(s, StatusCode::OK);
+        assert_eq!(v["partners"][0]["id"], "aaapd");
+        assert_eq!(v["employers"][0]["name"], "Afro Connect");
+    }
+
+    #[tokio::test]
     async fn text_is_sent_compressed_for_slow_connections() {
         let app = app().await;
         let res = app
@@ -947,6 +957,8 @@ mod tests {
 
         // No SMS simulator and no demo sign-ins in production.
         let (s, _, _) = fetch_raw(&app, "/dev/sms", None).await;
+        assert_eq!(s, StatusCode::NOT_FOUND);
+        let (s, _, _) = fetch_raw(&app, "/v1/trial", None).await;
         assert_eq!(s, StatusCode::NOT_FOUND);
         let req = Request::builder()
             .method("POST")

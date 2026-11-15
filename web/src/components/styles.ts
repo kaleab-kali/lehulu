@@ -103,7 +103,6 @@ export const base = css`
   .status { color: var(--muted); font-size: 0.95rem; min-height: 1.2em; }
   .ok { background: var(--ok-soft); color: var(--ok); border-radius: 14px; padding: 0.75rem 1rem; font-weight: 600; }
   .error { color: var(--bad); background: var(--bad-soft); border-radius: 14px; padding: 0.7rem 1rem; font-weight: 600; }
-  .demo { font-size: 0.85rem; background: var(--raise); border-radius: 12px; padding: 0.45rem 0.8rem; color: var(--muted); }
 
   /* ---- progress ---- */
   .bar { height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden; }
@@ -169,6 +168,43 @@ export const base = css`
   .tiles .choice { flex-direction: column; justify-content: center; text-align: center; min-height: 128px; }
   .tiles .choice .ico { font-size: 2.4rem; width: 4rem; height: 4rem; border-radius: 18px; }
   .tiles .choice small { display: none; }
-  .bigicon { font-size: 3rem; text-align: center; line-height: 1; }
+  .bigicon { font-size: 3.5rem; line-height: 1; color: var(--accent); justify-self: center;
+    background: var(--soft); border-radius: 28px; padding: 1.1rem; display: grid; place-items: center; }
+
+  /* ---- icons (engine/icons.ts) ---- */
+  .i { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.2em; }
+  .bigicon .i { width: 1em; height: 1em; stroke-width: 1.6; }
+  .ico { color: var(--accent); }
+  .glyph { font-weight: 700; }
+  .tag .i { width: 1em; height: 1em; margin-inline-end: 0.25rem; }
+
+  /* ---- dashboard (partner, employer): summary cards with big numbers ---- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 0.75rem; }
+  .stat { background: var(--raise); border-radius: 18px; padding: 0.9rem 1rem; display: grid; gap: 0.15rem; }
+  .stat .n { font-size: 2.25rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+  .stat .l { color: var(--muted); font-size: 0.9rem; font-weight: 600; }
+  .stat.accent { background: var(--soft); }
+  .stat.accent .n { color: var(--accent); }
+  .head { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; justify-content: space-between; }
+  .pill { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; font-weight: 600;
+    border-radius: 999px; padding: 0.2rem 0.7rem; background: var(--raise); color: var(--muted); }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+  .pill.wait { background: var(--soft); color: var(--accent); }
+  .empty { display: grid; justify-items: center; text-align: center; gap: 0.5rem; padding: 1.25rem 0.5rem; color: var(--muted); }
+  .empty .i { width: 2.5rem; height: 2.5rem; color: var(--accent); stroke-width: 1.6; }
+
+  /* ---- foldable sections ---- */
+  details.fold { border: 1.5px solid var(--hair); border-radius: 16px; padding: 0 1rem; background: var(--bg); }
+  details.fold > summary { cursor: pointer; font-weight: 600; min-height: 48px; display: flex; align-items: center; gap: 0.5rem; list-style: none; }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary::after { content: '+'; margin-inline-start: auto; font-size: 1.3rem; color: var(--accent); }
+  details.fold[open] > summary::after { content: '−'; }
+  details.fold[open] { padding-bottom: 1rem; }
+
+  /* ---- a code shown on screen on a test system ---- */
+  .code { display: grid; gap: 0.25rem; background: var(--soft); border-radius: 16px; padding: 0.8rem 1rem; }
+  .code strong { font-size: 1.6rem; letter-spacing: 0.15em; color: var(--accent); }
+  .code small { color: var(--muted); }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 `;

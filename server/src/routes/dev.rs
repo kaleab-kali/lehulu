@@ -4,6 +4,45 @@
 use crate::{error::ApiError, routes::AppState};
 use axum::{extract::State, response::Html};
 
+#[derive(serde::Serialize)]
+pub struct Org {
+    id: String,
+    name: String,
+}
+
+#[derive(serde::Serialize)]
+pub struct Trial {
+    partners: Vec<Org>,
+    employers: Vec<Org>,
+}
+
+/// DEMO_MODE only: the test organisations, so the partner and employer screens can offer a one-click
+/// "Continue as …" instead of asking a visitor for a secret. 404 on a real system.
+pub async fn trial(State(st): State<AppState>) -> Result<axum::Json<Trial>, ApiError> {
+    if !st.cfg.demo_mode {
+        return Err(ApiError::NotFound("page"));
+    }
+    let list = |table: &'static str| {
+        let pool = st.pool.clone();
+        async move {
+            sqlx::query_as::<_, (String, String)>(&format!(
+                "SELECT id, name FROM {table} WHERE client_secret_hash IS NOT NULL ORDER BY rowid"
+            ))
+            .fetch_all(&pool)
+            .await
+            .map(|rows| {
+                rows.into_iter()
+                    .map(|(id, name)| Org { id, name })
+                    .collect::<Vec<_>>()
+            })
+        }
+    };
+    Ok(axum::Json(Trial {
+        partners: list("partners").await?,
+        employers: list("employers").await?,
+    }))
+}
+
 pub async fn sms_page(State(st): State<AppState>) -> Result<Html<String>, ApiError> {
     if !st.cfg.demo_mode {
         return Err(ApiError::NotFound("page"));

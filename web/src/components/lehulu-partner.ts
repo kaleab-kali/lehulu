@@ -4,6 +4,7 @@
 import { LitElement, html, nothing } from 'lit';
 import signupFlow from '@flows/signup.json';
 import { base } from './styles';
+import { icon } from '../engine/icons';
 import { FieldError, playables, staff, store, useApiBase, type NewRegistration, type StaffSession, type VouchRequest } from '../data/store';
 import { NEEDS, optionsFor } from '../engine/flow';
 import { text } from '../engine/i18n';
@@ -18,7 +19,7 @@ export class LehuluPartner extends LitElement {
   static styles = base;
   static properties = {
     _me: { state: true }, _reqs: { state: true }, _urls: { state: true }, _status: { state: true },
-    _lang: { state: true }, _error: { state: true }, _regError: { state: true }, _regField: { state: true }, _regStatus: { state: true },
+    _lang: { state: true }, _error: { state: true }, _decided: { state: true }, _regError: { state: true }, _regField: { state: true }, _regStatus: { state: true },
   };
   declare _me: StaffSession | null;
   declare _reqs: VouchRequest[];
@@ -30,6 +31,8 @@ export class LehuluPartner extends LitElement {
   declare _regField: string;
   declare _regStatus: string;
   private regLang: Lang = 'am';
+  /** Requests answered in this session (shown as a summary number). */
+  declare _decided: number;
 
   constructor() {
     super();
@@ -42,6 +45,7 @@ export class LehuluPartner extends LitElement {
     this._regError = '';
     this._regField = '';
     this._regStatus = '';
+    this._decided = 0;
   }
 
   connectedCallback() {
@@ -85,6 +89,7 @@ export class LehuluPartner extends LitElement {
       await store.decideVouch(this._me!.id, r.learnerId, decision);
       const who = r.name || w.theLearner;
       this._status = decision === 'confirm' ? w.confirmed(who) : w.declined(who);
+      this._decided++;
     } catch (e) {
       this._status = (e as Error).message;
     }
@@ -154,12 +159,15 @@ export class LehuluPartner extends LitElement {
               <span lang=${o.lang ?? nothing}>${text(o.label, lang)}</span></label>`)}
           </div>
         </fieldset>
+        <details class="fold">
+        <summary>${w.moreAbout}</summary>
+        <div style="display:grid;gap:1rem">
         <fieldset>
           <legend><strong>${w.learnerWays}</strong></legend>
           <div class="choices">
             ${optionsFor(step('ways')).map((o, k) => html`<label class="choice" for="reg-way-${k}">
               <input id="reg-way-${k}" type="checkbox" name="ways" .value=${o.value} />
-              ${o.icon ? html`<span class="ico" aria-hidden="true">${o.icon}</span>` : nothing}<span>${text(o.label, lang)}</span></label>`)}
+              ${o.icon ? html`<span class="ico" aria-hidden="true">${icon(o.icon)}</span>` : nothing}<span>${text(o.label, lang)}</span></label>`)}
           </div>
         </fieldset>
         <fieldset>
@@ -167,9 +175,11 @@ export class LehuluPartner extends LitElement {
           <div class="choices">
             ${NEEDS.needs.map((n, k) => html`<label class="choice" for="reg-need-${k}">
               <input id="reg-need-${k}" type="checkbox" name="needs" .value=${n.id} />
-              <span class="ico" aria-hidden="true">${n.icon}</span><span>${text(n.label, lang)}</span></label>`)}
+              <span class="ico" aria-hidden="true">${icon(n.icon)}</span><span>${text(n.label, lang)}</span></label>`)}
           </div>
         </fieldset>
+        </div>
+        </details>
         ${this._regError ? html`<p id="reg-err" class="error" role="alert">${this._regError}</p>` : nothing}
         <button type="submit" class="primary">${w.sendRegistration}</button>
         <p class="status" role="status">${this._regStatus}</p>
@@ -184,18 +194,24 @@ export class LehuluPartner extends LitElement {
     }
     return html`<div style="display:grid;gap:1.25rem" lang=${this._lang}>
       <section class="card" aria-labelledby="p-h">
-        <h2 id="p-h" tabindex="-1">${w.requestsTitle}</h2>
-        <div class="row">
-          <p class="meta">${w.signedInAs(this._me.name)}</p>
-          <button type="button" class="small" @click=${this.signOut}>${w.signOut}</button>
+        <div class="head">
+          <h2 id="p-h" tabindex="-1">${w.requestsTitle}</h2>
+          <div class="row">
+            <span class="pill">${icon('users')} ${w.signedInAs(this._me.name)}</span>
+            <button type="button" class="small" @click=${this.signOut}>${w.signOut}</button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat accent"><span class="n">${this._reqs.length}</span><span class="l">${w.waitingN}</span></div>
+          <div class="stat"><span class="n">${this._decided}</span><span class="l">${w.confirmedN}</span></div>
         </div>
         ${this._error ? html`<p class="error" role="alert">${this._error}</p>` : nothing}
         <p role="status" class="status">${this._status}</p>
         ${this._reqs.length === 0
-          ? html`<p>${w.noRequests}</p>`
+          ? html`<div class="empty">${icon('inbox')}<p>${w.noRequests}</p></div>`
           : html`<ul style="list-style:none;margin:0;padding:0;display:grid;gap:.6rem">
               ${this._reqs.map((r) => html`<li class="card" style="gap:.4rem">
-                <h3>${r.name || w.voiceName} · ${r.phone}</h3>
+                <div class="head"><h3>${r.name || w.voiceName} · ${r.phone}</h3><span class="pill wait">${w.waitingPill}</span></div>
                 ${r.nameAudio && this._urls[r.nameAudio]
                   ? html`<audio controls preload="none" src=${this._urls[r.nameAudio]} aria-label=${w.nameAudio}></audio>`
                   : nothing}

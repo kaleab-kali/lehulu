@@ -14,7 +14,7 @@ rm -rf "$DEST/.git"
 # theme="light" matches Savanna (light only). #b3261e is Savanna's red darkened to pass 4.5:1 with white text
 # (Savanna's own #db3e3e is 4.4:1). The scroll offset clears Savanna's fixed header (72px) plus its
 # course bar (63-118px), so a focused heading is never hidden under them (WCAG 2.4.11).
-SNIPPET='<section aria-label="Sign up for Savanna" style="max-width:36rem;margin:1.5rem auto;padding:0 16px"><lehulu-signup lang="en" theme="light" jobs-url="__BASE__jobs/" style="--lehulu-accent:#b3261e;--lehulu-accent-2:#e57373;--lehulu-soft:#fbe9e8;--lehulu-scroll-offset:12.5rem"></lehulu-signup></section>'
+SNIPPET='<section aria-label="Sign up for Savanna" style="max-width:36rem;margin:1.5rem auto;padding:0 16px"><lehulu-signup lang="en" theme="light" jobs-url="__BASE__jobs/" style="--lehulu-accent:#b3261e;--lehulu-accent-2:#e57373;--lehulu-soft:#fbe9e8;--lehulu-scroll-offset:12.5rem"></lehulu-signup><div id="lehulu-note" style="margin-top:1rem"></div></section>'
 inject() { # $1 = html file, $2 = relative path from that file to the site root
   local f="$1" up="$2"
   local snip="${SNIPPET//__BASE__/$up}"
@@ -45,7 +45,7 @@ html = html[:at] + snip + html[at:]
 # changed, Jobs in the sidebar). Lehulu sends lehulu:preferences only with the learner's consent.
 host = (
     f'<script type="module">import {{ adaptPage }} from "{up}lehulu.js";'
-    f'document.addEventListener("lehulu:preferences", (e) => adaptPage(e.detail, {{ jobsUrl: "{up}jobs/" }}));</script>'
+    f'document.addEventListener("lehulu:preferences", (e) => adaptPage(e.detail, {{ jobsUrl: "{up}jobs/", noteIn: "#lehulu-note" }}));</script>'
 )
 html = html.replace("</body>", f'<script type="module" src="{up}lehulu.js"></script>{host}</body>', 1)
 open(path, "w", encoding="utf-8").write(html)

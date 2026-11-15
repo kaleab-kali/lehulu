@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign up · Lehulu</title>
+    <link rel="stylesheet" href="/src/pages.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to sign-up</a>
+    <header class="topbar">
+      <a class="brand" href="../">Lehulu</a>
+      <nav aria-label="Main">
+        <a href="./" aria-current="page">Sign up</a>
+        <a href="../jobs/">Jobs and profile</a>
+        <a href="../partner/">Partner</a>
+        <a href="../employer/">Employer</a>
+      </nav>
+    </header>
+    <main id="main">
+      <h1>Join Savanna</h1>
+      <p class="muted">One question at a time. There is no time limit, and you can stop and continue later.
+        Already have an account? <a href="../jobs/#profile">Sign in</a>.</p>
+
+      <lehulu-signup lang="en" jobs-url="../jobs/" profile-url="../jobs/#profile"></lehulu-signup>
+      <div id="host-note"></div>
+      <p id="host-status" role="status" class="muted"></p>
+    </main>
+    <script type="module" src="/src/pages.ts"></script>
+  </body>
+</html>

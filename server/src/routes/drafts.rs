@@ -118,7 +118,7 @@ async fn upsert(st: &AppState, code: &str, d: &Draft) -> ApiResult<()> {
         st.sms.send(
             &phone,
             &format!(
-                "Lehulu: continue your sign-up any time: {}/?resume={code} (code {code}). There is no time limit.",
+                "Lehulu: continue your sign-up any time: {}/signup/?resume={code} (code {code}). There is no time limit.",
                 st.cfg.public_url
             ),
         );

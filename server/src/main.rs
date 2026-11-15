@@ -44,8 +44,8 @@ async fn main() {
                 .expect("Could not open the database");
             match db::create_client(&pool, kind, id, args.get(2).map(String::as_str)).await {
                 Ok(secret) => println!(
-                    "Client ID: {id}
-Client secret: {secret}
+                    "Organisation ID (client ID): {id}
+Password (client secret): {secret}
 Give these to the {kind} privately. The secret is shown only now."
                 ),
                 Err(e) => {

@@ -16,7 +16,7 @@ async function noSeriousIssues(page: Page, where: string) {
 const newPhone = () => `09${String(Math.floor(Math.random() * 1e8)).padStart(8, '0')}`;
 
 async function signUp(page: Page, name: string, phone: string) {
-  await page.goto('./');
+  await page.goto('signup/');
   const f = page.locator('lehulu-signup');
   const next = () => f.getByRole('button', { name: /^(Next|Create my account)/ }).click();
   await f.getByRole('radio', { name: 'English' }).check();
@@ -116,10 +116,8 @@ test('@a11y another device: sign in by SMS code, choose the account on a shared 
 test('@a11y a partner registers a learner who is with them; the learner agrees with the SMS code', async ({ page }) => {
   const phone = newPhone();
   await page.goto('partner/');
-  const form = page.locator('lehulu-staff-sign-in');
-  await form.getByLabel('Client ID').fill('aaapd');
-  await form.getByLabel('Client secret').fill('aaapd-demo');
-  await form.getByRole('button', { name: 'Sign in' }).click();
+  await noSeriousIssues(page, 'partner sign-in with test accounts');
+  await page.locator('lehulu-staff-sign-in').getByRole('button', { name: 'Continue as AAAPD' }).click();
   const partner = page.locator('lehulu-partner');
   await expect(partner.getByRole('heading', { name: 'Requests to confirm a learner' })).toBeFocused();
 
@@ -130,6 +128,7 @@ test('@a11y a partner registers a learner who is with them; the learner agrees w
   await reg.getByRole('textbox', { name: 'Learner’s name' }).fill('Meron Alemu');
   await reg.getByRole('textbox', { name: 'Learner’s phone number' }).fill(phone);
   await reg.getByRole('radio', { name: 'English' }).check();
+  await reg.getByText(/^Optional: how they use their phone/).click();
   await reg.getByRole('checkbox', { name: /Sign language interpreter/ }).check();
   await reg.getByRole('button', { name: 'Send the SMS code' }).click();
   await expect(reg.getByRole('status')).toContainText('only when the learner agrees');
@@ -153,7 +152,7 @@ test('@a11y a partner registers a learner who is with them; the learner agrees w
 test('@a11y "continue later": the code reopens the answers, and a reload keeps them', async ({ page }) => {
   const f = page.locator('lehulu-signup');
   const next = () => f.getByRole('button', { name: /^Next/ }).click();
-  await page.goto('./');
+  await page.goto('signup/');
   await f.getByRole('radio', { name: 'English' }).check();
   await next();
   await f.getByRole('checkbox', { name: /Big and simple/ }).check();
@@ -174,10 +173,21 @@ test('@a11y "continue later": the code reopens the answers, and a reload keeps t
   await page.evaluate(() => {
     for (const k of Object.keys(localStorage)) if (k.startsWith('lehulu:draft')) localStorage.removeItem(k);
   });
-  await page.goto(`./?resume=${code}`);
+  await page.goto(`signup/?resume=${code}`);
   await expect(f.getByRole('status')).toContainText('restored');
   await expect(f.getByRole('textbox', { name: 'What is your name?' })).toHaveValue('Tigist Haile');
   await noSeriousIssues(page, 'restored from a link');
+});
+
+test('@a11y the front page says what Lehulu is and links to every part', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.getByRole('heading', { level: 1, name: 'Sign-up that works for everyone' })).toBeVisible();
+  for (const name of [/^Learner/, /^Partner, such as AAAPD/, /^Employer/, /^Jobs and my profile/]) {
+    await expect(page.getByRole('main').getByRole('link', { name })).toBeVisible();
+  }
+  await noSeriousIssues(page, 'front page');
+  await page.getByRole('link', { name: 'Try it as a learner' }).click();
+  await expect(page.locator('lehulu-signup').getByRole('heading', { name: 'Which language?' })).toBeVisible();
 });
 
 test('@a11y works on a blank page with no host styles (the judge’s install test)', async ({ page }) => {

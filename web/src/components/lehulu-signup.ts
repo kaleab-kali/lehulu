@@ -8,6 +8,7 @@ import signupFlow from '@flows/signup.json';
 import applyFlow from '@flows/apply.json';
 import employerFlow from '@flows/employer.json';
 import { base } from './styles';
+import { icon } from '../engine/icons';
 import { needsFromWays, optionsFor, realNeeds, toggleCheck, validateStep, visibleSteps } from '../engine/flow';
 import { modesFrom } from '../engine/modes';
 import { text, ui } from '../engine/i18n';
@@ -594,10 +595,9 @@ export class LehuluSignup extends LitElement {
     const m = this.modes;
     return html`
       <section class="card ${m.big ? 'big' : ''} ${m.tiles ? 'tiles' : ''}" lang=${this._lang} aria-labelledby="${this.uid}-h">
-        ${store.mode === 'local' ? html`<p class="demo">${this.t.demo}</p>` : nothing}
         <p class="step">${this.t.question(i + 1, steps.length)}</p>
         <div class="bar" aria-hidden="true"><span style="width:${Math.round((100 * (i + 1)) / steps.length)}%"></span></div>
-        ${m.tiles && s.icon ? html`<div class="bigicon" aria-hidden="true">${s.icon}</div>` : nothing}
+        ${m.tiles && s.icon ? html`<div class="bigicon" aria-hidden="true">${icon(s.icon, 'i')}</div>` : nothing}
         ${this.renderStep(s)}
         ${this._error ? html`<p id="${this.uid}-err" class="error" role="alert">${this._error}</p>` : nothing}
         ${this.renderNav(i, steps.length)}
@@ -625,14 +625,14 @@ export class LehuluSignup extends LitElement {
     const parts: TemplateResult[] = [];
     // Only buttons that work: a recorded prompt, or the phone's own voice in this language.
     if ((force || m.playPrompt) && (this.hasPrompt(s) || canSpeak(this._lang))) {
-      parts.push(html`<div class="row"><button type="button" class="small" @click=${() => this.play(s)}><span aria-hidden="true">🔊</span> ${this.t.play}</button></div>`);
+      parts.push(html`<div class="row"><button type="button" class="small" @click=${() => this.play(s)}>${icon('volume')} ${this.t.play}</button></div>`);
     }
     if ((force || m.signClips) && this._media.sign.includes(s.id)) {
       const key = `sign:${s.id}`;
       if (this._missing.has(key)) {
         // The clip is listed but failed to load: show nothing rather than a broken player.
       } else if (m.lazyMedia && !this._signLoaded) {
-        parts.push(html`<div class="row"><button type="button" class="small" @click=${() => (this._signLoaded = true)}><span aria-hidden="true">🤟</span> ${this.t.loadSign}</button></div>`);
+        parts.push(html`<div class="row"><button type="button" class="small" @click=${() => (this._signLoaded = true)}>${icon('hand')} ${this.t.loadSign}</button></div>`);
       } else {
         parts.push(html`<video
           src="${assetsBase()}sign/${s.id}.webm"
@@ -694,7 +694,7 @@ export class LehuluSignup extends LitElement {
                     ?data-first=${k === 0}
                     @change=${(e: Event) => this.choose(s, o.value, (e.target as HTMLInputElement).checked)}
                   />
-                  ${o.icon ? html`<span class="ico" aria-hidden="true">${o.icon}</span>` : nothing}
+                  ${o.icon ? html`<span class="ico" aria-hidden="true">${icon(o.icon)}</span>` : nothing}
                   <span lang=${o.lang ?? nothing}>${text(o.label, lang)}${o.sub ? html`<small>${text(o.sub, lang)}</small>` : nothing}</span>
                 </label>`;
               })}
@@ -741,7 +741,7 @@ export class LehuluSignup extends LitElement {
                   <span class="row">
                     ${this._answers[`${x.id}__audio`]
                       ? html`<button type="button" class="small" aria-label="${this._playing === x.id ? this.t.stopPlaying : this.t.playRec}: ${name}" @click=${() => this.playRecording(x.id)}>
-                          <span aria-hidden="true">${this._playing === x.id ? '⏹' : '▶'}</span> ${this._playing === x.id ? this.t.stopPlaying : this.t.playRec}
+                          ${icon(this._playing === x.id ? 'stop' : 'play')} ${this._playing === x.id ? this.t.stopPlaying : this.t.playRec}
                         </button>`
                       : nothing}
                     <button type="button" class="small" aria-label="${this.t.change}: ${name}" @click=${() => this.edit(x.id)}>${this.t.change}</button>
@@ -767,13 +767,13 @@ export class LehuluSignup extends LitElement {
     const big = this.modes.voiceFirst && !has && !rec;
     return html`<div class="row">
       <button type="button" data-voice class=${big ? 'primary grow' : 'small'} @click=${() => this.toggleVoice(s)}>
-        <span aria-hidden="true">${rec ? '⏹' : '🎤'}</span> ${first}
+        ${icon(rec ? 'stop' : 'mic')} ${first}
       </button>
       ${has && !rec
         ? html`<button type="button" class="small" @click=${() => this.playRecording(s.id)}>
-              <span aria-hidden="true">${this._playing === s.id ? '⏹' : '▶'}</span> ${this._playing === s.id ? t.stopPlaying : t.playMine}
+              ${icon(this._playing === s.id ? 'stop' : 'play')} ${this._playing === s.id ? t.stopPlaying : t.playMine}
             </button>
-            <button type="button" class="small" @click=${() => this.deleteRecording(s)}><span aria-hidden="true">🗑</span> ${t.deleteRec}</button>`
+            <button type="button" class="small" @click=${() => this.deleteRecording(s)}>${icon('trash')} ${t.deleteRec}</button>`
         : nothing}
     </div>`;
   }
@@ -783,26 +783,30 @@ export class LehuluSignup extends LitElement {
     const label = this._returnToReview ? this.t.save : last ? text(this.def.finish, this._lang) || this.t.next : `${this.t.next} →`;
     return html`
       <div class="row">
-        ${i > 0 && !this._returnToReview ? html`<button type="button" class="grow" @click=${this.back}>← ${this.t.back}</button>` : nothing}
+        ${i > 0 && !this._returnToReview ? html`<button type="button" class="grow" @click=${this.back}>${icon('arrowLeft')} ${this.t.back}</button>` : nothing}
         <button type="button" class="primary grow" aria-disabled=${this._busy ? 'true' : nothing} @click=${this.next}>${label}</button>
       </div>
-      ${this.flow === 'signup' && !last ? html`<div class="row"><button type="button" class="small" @click=${this.later}><span aria-hidden="true">💾</span> ${this.t.later}</button></div>` : nothing}
+      ${this.flow === 'signup' && !last ? html`<div class="row"><button type="button" class="small" @click=${this.later}>${icon('save')} ${this.t.later}</button></div>` : nothing}
     `;
   }
 
   private renderDone() {
     const t = this.t;
-    const heading = (s: string) => html`<h2 id="${this.uid}-done" tabindex="-1">${s}</h2>`;
+    const heading = (s: string, describedBy?: string) =>
+      html`<h2 id="${this.uid}-done" tabindex="-1" aria-describedby=${describedBy ?? nothing}>${s}</h2>`;
     if (this.flow === 'signup') {
       const l = this._done!.learner!;
+      // Read together with the heading when focus lands on it: the ID status, and that the site now adapts.
+      const said = [`${this.uid}-id`, l.shareWithHost ? `${this.uid}-adapt` : ''].filter(Boolean).join(' ');
       return html`<section class="card" lang=${this._lang} aria-labelledby="${this.uid}-done">
-        ${heading(t.done.signup)}
-        <p class="ok">${t.idStatus[l.idStatus] ?? ''}</p>
+        ${heading(t.done.signup, said)}
+        <p class="ok" id="${this.uid}-id">${t.idStatus[l.idStatus] ?? ''}</p>
+        ${l.shareWithHost ? html`<p class="ok" id="${this.uid}-adapt">${icon('sparkles')} ${t.adapted}</p>` : nothing}
         <div class="row">
-          <a class="btn primary grow" href=${this.jobsUrl}><span aria-hidden="true">💼</span> ${t.findJobs}</a>
-          <a class="btn grow" href=${this.profileUrl}><span aria-hidden="true">👤</span> ${t.profile}</a>
+          <a class="btn primary grow" href=${this.jobsUrl}>${icon('briefcase')} ${t.findJobs}</a>
+          <a class="btn grow" href=${this.profileUrl}>${icon('user')} ${t.profile}</a>
         </div>
-        <button type="button" @click=${() => this.emit('lehulu:start-lesson', { learnerId: l.id })}><span aria-hidden="true">📘</span> ${t.startLesson}</button>
+        <button type="button" @click=${() => this.emit('lehulu:start-lesson', { learnerId: l.id })}>${icon('book')} ${t.startLesson}</button>
       </section>`;
     }
     if (this.flow === 'apply') {

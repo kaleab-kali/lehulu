@@ -3,6 +3,7 @@
 
 import { LitElement, html, nothing } from 'lit';
 import { base } from './styles';
+import { icon } from '../engine/icons';
 import { NEEDS, needLabel } from '../engine/flow';
 import { session, store, useApiBase, type Job } from '../data/store';
 import type { Lang } from '../engine/types';
@@ -104,7 +105,7 @@ export class LehuluJobs extends LitElement {
     const am = this._lang === 'am';
     if (this._applying) {
       const w = words(this._lang);
-      const back = html`<div class="row"><button type="button" class="small" @click=${this.close}><span aria-hidden="true">←</span> ${w.backToJobs}</button></div>`;
+      const back = html`<div class="row"><button type="button" class="small" @click=${this.close}>${icon('arrowLeft')} ${w.backToJobs}</button></div>`;
       if (!this._signedIn) {
         return html`${back}
           <section class="card" lang=${this._lang} aria-labelledby="need-account-h">
@@ -123,24 +124,24 @@ export class LehuluJobs extends LitElement {
     const want = this._want;
     const full = this._jobs.filter((j) => this.score(j) === want.length);
     const shown = this._jobs.filter((j) => !want.length || this.score(j) > 0).sort((a, b) => this.score(b) - this.score(a));
-    const count = !want.length
-      ? am ? `${shown.length} ሥራዎች።` : `${shown.length} jobs.`
-      : am
-        ? `${full.length} ሥራዎች የሚፈልጉትን ድጋፍ ሁሉ ይሰጣሉ። ${shown.length - full.length} ተጨማሪ በከፊል ይሰጣሉ።`
-        : `${full.length} ${full.length === 1 ? 'job offers' : 'jobs offer'} all the support you need. ${shown.length - full.length} more offer some of it.`;
+    const w = words(this._lang);
+    const count = !want.length ? (am ? `${shown.length} ሥራዎች።` : `${shown.length} jobs.`) : w.countAll(shown.length, full.length);
     return html`
       <section class="card" lang=${this._lang} aria-labelledby="jobs-h">
         <h2 id="jobs-h">${am ? 'ለእርስዎ የሚሆኑ ሥራዎች' : 'Jobs for you'}</h2>
+        <details class="fold">
+        <summary>${icon('compass')} ${w.filterBy(want.length)}</summary>
         <fieldset>
           <legend><strong>${am ? 'የሚፈልጉትን ድጋፍ የሚሰጡ ሥራዎችን አሳይ' : 'Show jobs that offer the support I need'}</strong></legend>
           <div class="choices">
             ${NEEDS.needs.map((n, k) => html`<label class="choice" for="need-${k}">
               <input id="need-${k}" type="checkbox" .checked=${want.includes(n.id)} @change=${(e: Event) => this.toggle(n.id, (e.target as HTMLInputElement).checked)} />
-              <span class="ico" aria-hidden="true">${n.icon}</span><span>${text(n.label, this._lang)}</span>
+              <span class="ico" aria-hidden="true">${icon(n.icon)}</span><span>${text(n.label, this._lang)}</span>
             </label>`)}
           </div>
         </fieldset>
         <p class="hint">${am ? 'ምርጫዎ በዚህ ስልክ ላይ ብቻ ይቀራል። ቀጣሪ የሚያየው ሲያመለክቱ ከፈቀዱ ብቻ ነው።' : 'Your choices stay on this device. An employer sees them only if you choose to share when you apply.'}</p>
+        </details>
         ${this._error ? html`<p class="error" role="alert">${this._error}</p>` : nothing}
         <p role="status"><strong>${count}</strong></p>
         <ul style="list-style:none;margin:0;padding:0;display:grid;gap:.75rem">
@@ -149,7 +150,7 @@ export class LehuluJobs extends LitElement {
             <p class="meta">${j.org} · ${j.remote ? (am ? 'ከርቀት' : 'Remote') : j.city ?? ''}${want.length ? ` · ${am ? `ከ${want.length} ፍላጎቶችዎ ${this.score(j)} ይሰጣል` : `offers ${this.score(j)} of your ${want.length} needs`}` : ''}</p>
             <div>
               <span class="sr">${am ? 'የሚሰጥ ድጋፍ፦' : 'Support offered:'}</span>
-              <ul class="tags">${j.supportOffered.map((s) => html`<li class="tag ${want.includes(s) ? 'ok' : ''}">${want.includes(s) ? html`<span aria-hidden="true">✓ </span>` : nothing}${needLabel(s, this._lang)}</li>`)}</ul>
+              <ul class="tags">${j.supportOffered.map((s) => html`<li class="tag ${want.includes(s) ? 'ok' : ''}">${want.includes(s) ? icon('check') : nothing}${needLabel(s, this._lang)}</li>`)}</ul>
             </div>
           </li>`)}
         </ul>

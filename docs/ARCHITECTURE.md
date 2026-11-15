@@ -70,7 +70,7 @@ lehulu/
 │   ├── signup.json · apply.json · employer.json
 │   └── needs.json             # the shared list of needs (learner ↔ employer) + ways → needs
 ├── web/
-│   ├── index.html             # demo host page (Savanna-like, fixed top bar)
+│   ├── index.html             # front page; signup/, jobs/, partner/, employer/, blank.html are the other pages
 │   ├── jobs/ · partner/ · employer/ · embed/   # pages for the other screens and the iframe version
 │   ├── public/audio/{am,en}/  # recorded prompts <step-id>.opus (by people, see docs/RECORDING.md)
 │   ├── public/sign/           # interpreter clips <step-id>.webm

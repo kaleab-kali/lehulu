@@ -3,35 +3,91 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Join Savanna · Lehulu sign-up</title>
+    <title>Lehulu · sign-up that works for everyone</title>
+    <meta name="description" content="Accessible sign-up, profile and job applications for ALX Savanna and other platforms. Amharic and English, by typing or by voice, no ID document needed." />
     <link rel="stylesheet" href="/src/pages.css" />
   </head>
   <body>
-    <a class="skip" href="#main">Skip to sign-up</a>
+    <a class="skip" href="#main">Skip to content</a>
     <header class="topbar">
-      <strong>ALX Savanna</strong><span class="muted" style="color:inherit;opacity:.85">demo host page</span>
-      <nav aria-label="Lehulu demo pages">
-        <a href="jobs/">Jobs</a>
+      <a class="brand" href="./" aria-current="page">Lehulu</a>
+      <nav aria-label="Main">
+        <a href="signup/">Sign up</a>
+        <a href="jobs/">Jobs and profile</a>
         <a href="partner/">Partner</a>
         <a href="employer/">Employer</a>
       </nav>
     </header>
-    <main id="main">
-      <h1>Join Savanna</h1>
-      <p class="muted">Sign up below. There is no time limit, and you can stop and continue later. Already have an account? <a href="jobs/#profile">Sign in</a>.</p>
+    <main id="main" class="home">
+      <section class="hero" aria-labelledby="hero-h">
+        <p class="eyebrow" lang="am">ለሁሉ · for everyone</p>
+        <h1 id="hero-h">Sign-up that works for everyone</h1>
+        <p class="lead">Lehulu lets a learner join ALX Savanna and apply for jobs by typing or by voice, in Amharic or
+          English, with no ID document needed. It never asks about disability. It asks how you use your phone, and
+          adapts to that.</p>
+        <div class="actions">
+          <a class="button primary" href="signup/">Try it as a learner</a>
+          <a class="button" href="blank.html">See it on an empty page</a>
+        </div>
+      </section>
 
-      <!-- Level 1: this one tag (plus the script below) is all a host page needs. -->
-      <lehulu-signup lang="en" jobs-url="jobs/" profile-url="jobs/#profile"></lehulu-signup>
+      <ul class="facts" aria-label="Lehulu in numbers">
+        <li><strong>0</strong><span>questions about disability</span></li>
+        <li><strong>2</strong><span>languages: Amharic and English</span></li>
+        <li><strong>0</strong><span>time limits, and nothing is lost offline</span></li>
+        <li><strong>1</strong><span>line of code to add it to any site</span></li>
+      </ul>
 
-      <p id="host-status" role="status" class="muted"></p>
+      <section aria-labelledby="try-h">
+        <h2 id="try-h">Try each part</h2>
+        <ul class="tiles">
+          <li>
+            <a href="signup/">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+              <strong>Learner</strong>
+              <span>Sign up one question at a time. Choose “I listen”, “Pictures” or “Big and simple” and watch the screens change.</span>
+            </a>
+          </li>
+          <li>
+            <a href="partner/">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8"/><path d="M22 21a7 7 0 0 0-5-6.7"/></svg>
+              <strong>Partner, such as AAAPD</strong>
+              <span>Confirm a learner who has no ID document, or register someone who is with you.</span>
+            </a>
+          </li>
+          <li>
+            <a href="employer/">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+              <strong>Employer</strong>
+              <span>Post a job with the support it offers, and read applications, by text or by voice.</span>
+            </a>
+          </li>
+          <li>
+            <a href="jobs/">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m16 8-2 6-6 2 2-6z"/></svg>
+              <strong>Jobs and my profile</strong>
+              <span>Jobs sorted by the support you need. Sign in on another phone, change answers, download or delete your data.</span>
+            </a>
+          </li>
+          <li data-savanna hidden>
+            <a href="savanna/pages/homepage-v1-paced.html">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10 12 3l9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+              <strong>Inside Savanna</strong>
+              <span>The same sign-up inside the real Savanna pages, in Savanna’s colours. Savanna adapts when the learner agrees.</span>
+            </a>
+          </li>
+        </ul>
+        <p class="muted small">This is a test system: sign-in codes appear on screen instead of by SMS, and the
+          partner and employer screens offer one-tap test accounts. Nothing here is real data.</p>
+      </section>
 
-      <details>
-        <summary>How this page added Lehulu</summary>
+      <section class="install" aria-labelledby="install-h">
+        <h2 id="install-h">Add it to your site</h2>
         <pre><code>&lt;script type="module" src="https://YOUR-LEHULU-HOST/lehulu.js"&gt;&lt;/script&gt;
-&lt;lehulu-signup lang="am" jobs-url="/jobs"&gt;&lt;/lehulu-signup&gt;</code></pre>
-        <p>The API is the server <code>lehulu.js</code> came from. To use another one, add <code>api-base="https://…"</code>. That server must list your site in <code>ALLOWED_ORIGINS</code>.</p>
-        <p>To try it inside the real Savanna starter pages, run <code>scripts/import-savanna-starter.sh</code>.</p>
-      </details>
+&lt;lehulu-signup lang="am"&gt;&lt;/lehulu-signup&gt;</code></pre>
+        <p class="muted">Also available: an iframe for sites that block scripts, a REST API with
+          <a href="docs">interactive documentation</a>, and schema.org job listings.</p>
+      </section>
     </main>
     <script type="module" src="/src/pages.ts"></script>
   </body>

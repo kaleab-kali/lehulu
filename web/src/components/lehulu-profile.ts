@@ -5,6 +5,7 @@
 import { LitElement, html, nothing, type TemplateResult } from 'lit';
 import signupFlow from '@flows/signup.json';
 import { base } from './styles';
+import { icon } from '../engine/icons';
 import { NEEDS, needLabel, optionsFor } from '../engine/flow';
 import { text, ui } from '../engine/i18n';
 import { langOf, words } from '../engine/screens';
@@ -324,7 +325,7 @@ export class LehuluProfile extends LitElement {
         <div class="choices">
           ${opts.map((o, k) => html`<label class="choice" for="${name}-${k}">
             <input id="${name}-${k}" type=${type} name=${name} .value=${o.value} ?checked=${on(o.value)} />
-            ${o.icon ? html`<span class="ico" aria-hidden="true">${o.icon}</span>` : nothing}<span lang=${o.lang ?? nothing}>${o.label}</span></label>`)}
+            ${o.icon ? html`<span class="ico" aria-hidden="true">${icon(o.icon)}</span>` : nothing}<span lang=${o.lang ?? nothing}>${o.label}</span></label>`)}
         </div>
       </fieldset>`;
     let body: TemplateResult;

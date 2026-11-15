@@ -18,6 +18,7 @@ const UI = {
     recPending: 'Recording kept on this phone. It will be sent when you are connected.', voiceAnswer: 'Answered by voice',
     playFailed: 'This recording cannot be played here.',
     play: 'Play question',
+    adapted: 'This site now adapts to how you use your phone. You can change that in My profile.',
     signLabel: 'Sign language video for this question', loadSign: 'Load sign language video',
     resumeMissing: 'We could not find answers for that link. They may be older than a year. Please start again; it only takes a few minutes.',
     day: 'Day', month: 'Month', year: 'Year (Ethiopian calendar)', gregorian: (t: string) => `That is ${t} in the Gregorian calendar.`,
@@ -45,6 +46,8 @@ const UI = {
     recPending: 'ቅጂው በዚህ ስልክ ተቀምጧል። ሲገናኙ ይላካል።', voiceAnswer: 'በድምፅ ተመልሷል',
     playFailed: 'ይህ ቅጂ እዚህ ሊጫወት አይችልም።',
     play: 'ጥያቄውን ያጫውቱ',
+    // TODO(am-review)
+    adapted: 'ይህ ድረ-ገጽ አሁን ስልክዎን ከሚጠቀሙበት መንገድ ጋር ይስማማል። ይህን በመገለጫዎ ውስጥ መቀየር ይችላሉ።',
     signLabel: 'የዚህ ጥያቄ የምልክት ቋንቋ ቪዲዮ', loadSign: 'የምልክት ቋንቋ ቪዲዮ ጫን',
     // TODO(am-review)
     resumeMissing: 'ለዚህ ማስፈንጠሪያ መልሶችን ማግኘት አልቻልንም። ከአንድ ዓመት በላይ የቆዩ ሊሆኑ ይችላሉ። እባክዎ እንደገና ይጀምሩ፤ ጥቂት ደቂቃዎች ብቻ ይወስዳል።',
