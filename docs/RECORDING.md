@@ -1,13 +1,21 @@
 # Recording Amharic audio prompts and sign language clips
 
-The app plays a recorded prompt and a sign clip for each question **if the file exists**. Missing files are
-handled: the play button says "not recorded yet" and the sign area shows a note. Text is always on screen.
+The app plays a recorded prompt and a sign clip for each question **that is listed in `web/public/media.json`**.
+Without a recording, **Play question** uses the phone's own voice if it has one for that language (most phones
+have English; few have Amharic), and is hidden otherwise. A question without a sign clip shows no sign area.
+Text is always on screen. Record Amharic prompts first: that is where phones have no voice of their own.
+
+After adding files, list the question ids:
+
+```json
+{ "audio": { "en": ["language", "ways"], "am": ["language", "ways", "name"] }, "sign": ["language", "ways"] }
+```
 
 ## File names (one per question id)
 
 | Flow | Question ids |
 |---|---|
-| Sign-up | `language`, `ways`, `name`, `phone`, `dob`, `idType`, `idNumber`, `partner`, `supportNeeds`, `review` |
+| Sign-up | `language`, `ways`, `name`, `phone`, `dob`, `idType`, `idNumber`, `partner`, `supportNeeds`, `shareWithHost`, `review` |
 | Apply | `why`, `shareSupport`, `review` |
 | Employer | `title`, `org`, `city`, `supportOffered`, `review` |
 

@@ -19,7 +19,8 @@ pub enum ApiError {
     },
     #[error("not found: {0}")]
     NotFound(&'static str),
-    #[allow(dead_code)] // used once partner/employer auth lands (F13)
+    #[error("not signed in")]
+    Unauthorized,
     #[error("forbidden")]
     Forbidden,
     #[error(transparent)]
@@ -66,6 +67,12 @@ impl IntoResponse for ApiError {
                 StatusCode::NOT_FOUND,
                 "not_found".into(),
                 format!("We could not find that {what}."),
+                None,
+            ),
+            ApiError::Unauthorized => (
+                StatusCode::UNAUTHORIZED,
+                "sign_in_required".into(),
+                "Please sign in again. Nothing you saved is lost.".into(),
                 None,
             ),
             ApiError::Forbidden => (

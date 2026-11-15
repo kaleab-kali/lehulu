@@ -1,0 +1,5 @@
+{
+  "about": "Recorded question prompts and sign clips that exist. After recording public/audio/<lang>/<step>.opus or public/sign/<step>.webm, add the step id here so the Play / Sign buttons appear.",
+  "audio": { "en": [], "am": [] },
+  "sign": []
+}

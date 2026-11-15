@@ -1,6 +1,6 @@
-//! SQLite connection, migrations (embedded at compile time) and seed data.
+//! SQLite connection, migrations (embedded at compile time), seed data, demo sign-ins and backups.
 
-use crate::config::Config;
+use crate::{auth, config::Config};
 use serde::Deserialize;
 use sqlx::{
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
@@ -34,6 +34,7 @@ struct SeedJob {
     id: String,
     title: String,
     org: String,
+    employer_id: Option<String>,
     city: Option<String>,
     #[serde(default)]
     remote: bool,
@@ -41,17 +42,47 @@ struct SeedJob {
 }
 
 #[derive(Deserialize)]
-struct SeedPartner {
+struct SeedOrg {
     id: String,
     name: String,
 }
 
 pub async fn seed_if_empty(pool: &SqlitePool, cfg: &Config) -> Result<(), sqlx::Error> {
-    let (n,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM partners")
+    let (partners,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM partners")
         .fetch_one(pool)
         .await?;
-    if n == 0 {
+    let (employers,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM employers")
+        .fetch_one(pool)
+        .await?;
+    // Databases from before employer sign-in have partners but no employers: seed those too.
+    if partners == 0 || employers == 0 {
         seed(pool, cfg).await?;
+    }
+    if cfg.demo_mode {
+        enable_demo_sign_ins(pool).await?;
+    } else {
+        disable_demo_sign_ins(pool).await?;
+    }
+    Ok(())
+}
+
+/// Outside DEMO_MODE, `<id>-demo` secrets left from a demo run must stop working.
+pub async fn disable_demo_sign_ins(pool: &SqlitePool) -> Result<(), sqlx::Error> {
+    for table in ["partners", "employers"] {
+        let rows: Vec<(String, Option<String>)> =
+            sqlx::query_as(&format!("SELECT id, client_secret_hash FROM {table}"))
+                .fetch_all(pool)
+                .await?;
+        for (id, secret_hash) in rows {
+            if secret_hash.as_deref() == Some(auth::hash(&auth::demo_secret(&id)).as_str()) {
+                sqlx::query(&format!(
+                    "UPDATE {table} SET client_id = NULL, client_secret_hash = NULL WHERE id = ?"
+                ))
+                .bind(&id)
+                .execute(pool)
+                .await?;
+            }
+        }
     }
     Ok(())
 }
@@ -59,27 +90,41 @@ pub async fn seed_if_empty(pool: &SqlitePool, cfg: &Config) -> Result<(), sqlx::
 pub async fn seed(pool: &SqlitePool, cfg: &Config) -> Result<(), sqlx::Error> {
     let read = |name: &str| std::fs::read_to_string(format!("{}/{name}", cfg.seed_dir));
     let now = chrono::Utc::now().to_rfc3339();
-    if let Ok(text) = read("partners.json") {
-        let partners: Vec<SeedPartner> =
-            serde_json::from_str(&text).expect("seed/partners.json is not valid");
-        for p in partners {
-            sqlx::query("INSERT OR IGNORE INTO partners (id, name) VALUES (?, ?)")
-                .bind(&p.id)
-                .bind(&p.name)
+    for (file, table) in [
+        ("partners.json", "partners"),
+        ("employers.json", "employers"),
+    ] {
+        if let Ok(text) = read(file) {
+            let orgs: Vec<SeedOrg> = serde_json::from_str(&text)
+                .unwrap_or_else(|e| panic!("seed/{file} is not valid: {e}"));
+            for o in orgs {
+                sqlx::query(&format!(
+                    "INSERT OR IGNORE INTO {table} (id, name) VALUES (?, ?)"
+                ))
+                .bind(&o.id)
+                .bind(&o.name)
                 .execute(pool)
                 .await?;
+            }
         }
     }
     if let Ok(text) = read("jobs.json") {
         let jobs: Vec<SeedJob> = serde_json::from_str(&text).expect("seed/jobs.json is not valid");
         for j in jobs {
-            sqlx::query("INSERT OR IGNORE INTO jobs (id, title, org, city, remote, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+            sqlx::query("INSERT OR IGNORE INTO jobs (id, title, org, city, remote, employer_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
                 .bind(&j.id)
                 .bind(&j.title)
                 .bind(&j.org)
                 .bind(&j.city)
                 .bind(j.remote)
+                .bind(&j.employer_id)
                 .bind(&now)
+                .execute(pool)
+                .await?;
+            // Jobs seeded before employers existed get their owner.
+            sqlx::query("UPDATE jobs SET employer_id = ? WHERE id = ? AND employer_id IS NULL")
+                .bind(&j.employer_id)
+                .bind(&j.id)
                 .execute(pool)
                 .await?;
             for need in j.support_offered {
@@ -91,5 +136,74 @@ pub async fn seed(pool: &SqlitePool, cfg: &Config) -> Result<(), sqlx::Error> {
             }
         }
     }
+    Ok(())
+}
+
+/// DEMO_MODE only: every partner and employer without credentials can sign in with
+/// client ID `<id>` and secret `<id>-demo`.
+pub async fn enable_demo_sign_ins(pool: &SqlitePool) -> Result<(), sqlx::Error> {
+    for table in ["partners", "employers"] {
+        let ids: Vec<(String,)> = sqlx::query_as(&format!(
+            "SELECT id FROM {table} WHERE client_secret_hash IS NULL"
+        ))
+        .fetch_all(pool)
+        .await?;
+        for (id,) in ids {
+            sqlx::query(&format!(
+                "UPDATE {table} SET client_id = ?, client_secret_hash = ? WHERE id = ?"
+            ))
+            .bind(&id)
+            .bind(auth::hash(&auth::demo_secret(&id)))
+            .bind(&id)
+            .execute(pool)
+            .await?;
+        }
+    }
+    Ok(())
+}
+
+/// `lehulu create-client partner|employer <id> [name]`: create or reset an organisation's credentials.
+/// Returns the new secret, shown once.
+pub async fn create_client(
+    pool: &SqlitePool,
+    kind: &str,
+    id: &str,
+    name: Option<&str>,
+) -> Result<String, String> {
+    let table = match kind {
+        "partner" => "partners",
+        "employer" => "employers",
+        _ => return Err("The kind must be `partner` or `employer`.".into()),
+    };
+    let secret = auth::new_secret();
+    sqlx::query(&format!(
+        "INSERT INTO {table} (id, name, client_id, client_secret_hash) VALUES (?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET client_id = excluded.client_id, client_secret_hash = excluded.client_secret_hash,
+         name = COALESCE(?, {table}.name)"
+    ))
+    .bind(id)
+    .bind(name.unwrap_or(id))
+    .bind(id)
+    .bind(auth::hash(&secret))
+    .bind(name)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+    // Old tokens stop working when the secret changes.
+    sqlx::query("DELETE FROM access_tokens WHERE kind = ? AND subject = ?")
+        .bind(kind)
+        .bind(id)
+        .execute(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(secret)
+}
+
+/// `lehulu backup <file>`: a consistent copy of the database while the server runs.
+pub async fn backup(pool: &SqlitePool, file: &str) -> Result<(), sqlx::Error> {
+    sqlx::query("VACUUM INTO ?")
+        .bind(file)
+        .execute(pool)
+        .await?;
     Ok(())
 }

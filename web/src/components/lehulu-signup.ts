@@ -1,20 +1,22 @@
-// <lehulu-signup flow="signup|apply|employer" lang="am|en" job-id="..." jobs-url="..." profile-url="...">
+// <lehulu-signup flow="signup|apply|employer" lang="am|en" job-id="..." jobs-url="..." profile-url="..." api-base="...">
 // One renderer for every flow: one question per screen, autosave, no time limits, voice on text fields,
 // plain errors that are announced and focused, and a review screen with Change buttons.
+// A "continue later" SMS link (?resume=CODE) reopens the draft; a copy is also kept on the phone for offline use.
 
 import { LitElement, html, nothing, type TemplateResult } from 'lit';
 import signupFlow from '@flows/signup.json';
 import applyFlow from '@flows/apply.json';
 import employerFlow from '@flows/employer.json';
 import { base } from './styles';
-import { needsFromWays, optionsFor, validateStep, visibleSteps } from '../engine/flow';
+import { icon } from '../engine/icons';
+import { needsFromWays, optionsFor, realNeeds, toggleCheck, validateStep, visibleSteps } from '../engine/flow';
 import { modesFrom } from '../engine/modes';
 import { text, ui } from '../engine/i18n';
 import { normalisePhone } from '../engine/validators';
 import { Recorder } from '../engine/recorder';
-import { assetsBase } from '../engine/assets';
+import { EMPTY_MANIFEST, assetsBase, canSpeak, mediaManifest, speak, stopSpeaking, type MediaManifest } from '../engine/assets';
 import { MONTHS, currentEthiopianYear, gregorianText, isValid } from '../lib/ethiopian-calendar';
-import { FieldError, session, store, type Learner } from '../data/store';
+import { FieldError, session, store, useApiBase, type Learner } from '../data/store';
 import type { Answers, EthDate, Flow, Lang, Step } from '../engine/types';
 
 const FLOWS: Record<string, Flow> = {
@@ -51,6 +53,7 @@ export class LehuluSignup extends LitElement {
     _missing: { state: true },
     _signLoaded: { state: true },
     _playing: { state: true },
+    _media: { state: true },
   };
 
   declare flow: string;
@@ -71,6 +74,8 @@ export class LehuluSignup extends LitElement {
   declare _missing: Set<string>;
   declare _signLoaded: boolean;
   declare _playing: string | null;
+  /** Which recorded prompts and sign clips exist (public/media.json). */
+  declare _media: MediaManifest;
 
   private uid = `lehulu-${++counter}`;
   private focusTarget: 'heading' | 'field' | 'done' | 'voice' | null = null;
@@ -102,19 +107,27 @@ export class LehuluSignup extends LitElement {
     this._missing = new Set();
     this._signLoaded = false;
     this._playing = null;
+    this._media = EMPTY_MANIFEST;
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this.player?.pause();
+    stopSpeaking();
+    if (typeof speechSynthesis !== 'undefined') speechSynthesis.removeEventListener?.('voiceschanged', this.voicesReady);
     for (const url of this.previews.values()) URL.revokeObjectURL(url);
   }
 
   connectedCallback() {
     super.connectedCallback();
+    useApiBase(this);
     this._lang = this.getAttribute('lang') === 'am' ? 'am' : 'en';
+    // Phone voices load late: show "Play question" once one for this language is ready.
+    if (typeof speechSynthesis !== 'undefined') speechSynthesis.addEventListener?.('voiceschanged', this.voicesReady);
     void this.restore();
   }
+
+  private voicesReady = () => this.requestUpdate();
 
   firstUpdated() {
     if (this.focusOnLoad) this.focusTarget = 'heading';
@@ -144,30 +157,74 @@ export class LehuluSignup extends LitElement {
 
   // ---------- lifecycle helpers ----------
   private async restore() {
-    const learnerId = session.get();
-    if (this.flow === 'apply' && learnerId) {
+    if (this.flow === 'apply' && session.get()) {
       try {
-        const l = await store.getLearner(learnerId);
+        const l = await store.me();
         this._prefs = l.accessPreferences;
         this._lang = l.language;
       } catch {
         /* signed-out or deleted: handled at finish */
       }
     }
-    let code: string | null = null;
-    try { code = localStorage.getItem(this.draftKey); } catch { /* storage blocked */ }
-    if (!code) return;
-    const d = await store.getDraft(code);
-    if (d && d.flowId === this.flow) {
-      this.draftCode = code;
-      // A recording that never left the old page (offline, or an older draft) is gone: ask again.
-      this._answers = Object.fromEntries(
-        Object.entries(d.answers as Answers).filter(([k, v]) => !(k.endsWith('__audio') && (v === PENDING || v === 'recorded'))),
-      ) as Answers;
-      this._i = Math.min(d.stepIndex, this.steps.length - 1);
-      if (this._answers.language === 'am' || this._answers.language === 'en') this.setLang(this._answers.language);
-      this._status = this.t.restored;
+    if (this.flow !== 'signup') {
+      this.checkMedia();
+      return;
     }
+    // A "continue later" link (?resume=CODE) wins over a draft saved on this phone.
+    let fromLink: string | null = null;
+    try { fromLink = new URLSearchParams(location.search).get('resume'); } catch { /* no location */ }
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(this.draftKey); } catch { /* storage blocked */ }
+    const copy = this.offlineCopy();
+    if (!fromLink && copy) {
+      // The copy on this phone is the newest: it is updated after every answer, even offline.
+      this.draftCode = saved;
+      this.load(copy.answers, copy.stepIndex);
+    } else {
+      const code = fromLink?.trim().toUpperCase() || saved;
+      const d = code ? await store.getDraft(code) : null;
+      if (d && d.flowId === this.flow) {
+        this.draftCode = code;
+        this.load(d.answers as Answers, d.stepIndex);
+        try { localStorage.setItem(this.draftKey, code!); } catch { /* storage blocked */ }
+      } else if (fromLink) {
+        this._status = this.t.resumeMissing;
+      }
+    }
+    this.checkMedia();
+  }
+
+  private load(answers: Answers, stepIndex: number) {
+    // A recording that never left the old page (offline, or an older draft) is gone: ask again.
+    this._answers = Object.fromEntries(
+      Object.entries(answers).filter(([k, v]) => !(k.endsWith('__audio') && (v === PENDING || v === 'recorded'))),
+    ) as Answers;
+    this._i = Math.min(stepIndex, this.steps.length - 1);
+    if (this._answers.language === 'am' || this._answers.language === 'en') this.setLang(this._answers.language);
+    this._status = this.t.restored;
+  }
+
+  /** Answers kept on this phone so sign-up survives going offline. Never the ID number. */
+  private get copyKey() {
+    return `lehulu:draft-copy:${this.flow}`;
+  }
+  private offlineCopy(): { answers: Answers; stepIndex: number } | null {
+    try { return JSON.parse(localStorage.getItem(this.copyKey) ?? 'null'); } catch { return null; }
+  }
+  private keepCopy() {
+    const { idNumber: _, ...answers } = this._answers;
+    try { localStorage.setItem(this.copyKey, JSON.stringify({ answers, stepIndex: this._i })); } catch { /* storage blocked */ }
+  }
+  private dropDraft() {
+    try {
+      localStorage.removeItem(this.draftKey);
+      localStorage.removeItem(this.copyKey);
+    } catch { /* ignore */ }
+  }
+
+  /** Load the list of recorded prompts and sign clips, so only buttons that work are shown. */
+  private checkMedia() {
+    void mediaManifest().then((m) => (this._media = m));
   }
 
   private applyFocus() {
@@ -193,11 +250,14 @@ export class LehuluSignup extends LitElement {
   private setLang(lang: Lang) {
     this._lang = lang;
     this.setAttribute('lang', lang);
+    if (this.flow === 'signup') this.emit('lehulu:language', { language: lang });
   }
 
   private set(id: string, value: Answers[string]) {
     this._answers = { ...this._answers, [id]: value };
     if (this._error) this._error = null;
+    // Kept on the phone the moment it is given: a reload or a dropped connection loses nothing.
+    if (this.flow === 'signup') this.keepCopy();
   }
 
   // ---------- navigation ----------
@@ -207,7 +267,13 @@ export class LehuluSignup extends LitElement {
       this.set(s.id, needsFromWays((this._answers.ways as string[]) ?? []));
     }
     this.focusTarget = 'heading';
+    this.emitStep();
     void this.autosave();
+  }
+
+  /** Lets the host show progress elsewhere (never the answers). */
+  private emitStep() {
+    this.emit('lehulu:step', { flow: this.flow, step: this._i + 1, of: this.steps.length, id: this.steps[this._i]?.id });
   }
 
   private back = () => {
@@ -216,6 +282,8 @@ export class LehuluSignup extends LitElement {
     this._error = null;
     this._status = '';
     this.focusTarget = 'heading';
+    this.emitStep();
+    if (this.flow === 'signup') this.keepCopy();
   };
 
   private edit(stepId: string) {
@@ -263,6 +331,7 @@ export class LehuluSignup extends LitElement {
 
   private async autosave(sendLinkTo?: string) {
     if (this.flow !== 'signup' && !sendLinkTo) return null;
+    if (this.flow === 'signup') this.keepCopy();
     try {
       this.draftCode = await store.saveDraft(this.draftCode, {
         flowId: this.flow,
@@ -270,6 +339,8 @@ export class LehuluSignup extends LitElement {
         answers: this._answers as Record<string, unknown>,
         sendLinkTo,
       });
+      // The account may have been created while this save was on its way: then the draft is finished.
+      if (this._done) return this.draftCode;
       try { localStorage.setItem(this.draftKey, this.draftCode); } catch { /* storage blocked */ }
       return this.draftCode;
     } catch {
@@ -286,10 +357,7 @@ export class LehuluSignup extends LitElement {
   // ---------- answers ----------
   private choose(s: Step, value: string, checked: boolean) {
     if (s.type === 'checks') {
-      const cur = new Set((this._answers[s.id] as string[]) ?? []);
-      if (checked) cur.add(value);
-      else cur.delete(value);
-      this.set(s.id, [...cur]);
+      this.set(s.id, toggleCheck((this._answers[s.id] as string[]) ?? [], value, checked));
     } else {
       this.set(s.id, value);
       if (s.id === 'language' && (value === 'am' || value === 'en')) this.setLang(value);
@@ -353,9 +421,10 @@ export class LehuluSignup extends LitElement {
     this.player?.pause();
     this.player = null;
     this._playing = null;
+    stopSpeaking();
   }
 
-  private playRecording(stepId: string) {
+  private async playRecording(stepId: string) {
     if (this._playing === stepId) {
       this.stopPlaying();
       this._status = '';
@@ -363,7 +432,10 @@ export class LehuluSignup extends LitElement {
     }
     this.stopPlaying();
     const ref = this.audioRef(stepId);
-    const url = this.previews.get(stepId) ?? (ref ? store.recordingUrl(ref) : '');
+    let url = this.previews.get(stepId) ?? '';
+    if (!url && ref) {
+      try { url = await store.playable(ref); } catch { url = ''; }
+    }
     if (!url) {
       this._status = this.t.playFailed;
       return;
@@ -403,11 +475,28 @@ export class LehuluSignup extends LitElement {
     }
   }
 
+  private hasPrompt(s: Step) {
+    return this._media.audio[this._lang].includes(s.id);
+  }
+
+  /** The human recording if there is one, otherwise the phone's own voice (never both). */
   private play(s: Step) {
-    const audio = new Audio(`${assetsBase()}audio/${this._lang}/${s.id}.opus`);
-    audio.play().catch(() => {
-      this._status = this.t.audioMissing;
-    });
+    this.stopPlaying();
+    if (this.hasPrompt(s)) {
+      const audio = new Audio(`${assetsBase()}audio/${this._lang}/${s.id}.opus`);
+      this.player = audio;
+      audio.play().catch(() => {
+        if (!this.speakStep(s)) this._status = this.t.playFailed;
+      });
+      return;
+    }
+    if (!this.speakStep(s)) this._status = this.t.playFailed;
+  }
+
+  private speakStep(s: Step) {
+    const lang = this._lang;
+    const parts = [text(s.title, lang), text(s.hint, lang), ...optionsFor(s).map((o) => text(o.label, lang))];
+    return speak(parts.filter(Boolean).join('. '), lang);
   }
 
   private answerText(s: Step): string {
@@ -435,28 +524,30 @@ export class LehuluSignup extends LitElement {
     try {
       await this.flushRecordings();
       if (this.flow === 'signup') {
-        const learner = await store.createLearner({
+        const { learner, linkToken } = await store.createLearner({
           name: str('name'),
           nameAudio: this.audioRef('name'),
           phone: normalisePhone(str('phone')) ?? str('phone'),
           language: (a.language as Lang) ?? this._lang,
           dobEthiopian: (a.dob as EthDate) ?? null,
           accessPreferences: (a.ways as string[]) ?? [],
-          supportNeeds: (a.supportNeeds as string[]) ?? [],
+          supportNeeds: realNeeds(a.supportNeeds as string[]),
           idType: a.idType as Learner['idType'],
           idNumber: str('idNumber') || null,
           partner: a.idType === 'partner' ? (a.partner as string) : null,
+          shareWithHost: a.shareWithHost === 'yes',
         });
-        session.set(learner.id);
-        try { localStorage.removeItem(this.draftKey); } catch { /* ignore */ }
+        this.dropDraft();
         this._done = { learner };
-        this.emit('lehulu:signup-complete', { learnerId: learner.id, idStatus: learner.idStatus });
-        this.emit('lehulu:preferences', { language: learner.language, accessPreferences: learner.accessPreferences });
+        // linkToken: the host's server exchanges it once at POST /v1/link to link this learner to its own account.
+        this.emit('lehulu:signup-complete', { learnerId: learner.id, idStatus: learner.idStatus, linkToken });
+        if (learner.shareWithHost) {
+          this.emit('lehulu:preferences', { language: learner.language, accessPreferences: learner.accessPreferences });
+        }
       } else if (this.flow === 'apply') {
-        const learnerId = session.get();
-        if (!learnerId || !this.jobId) throw new FieldError(this.t.signUpFirst);
+        if (!session.get() || !this.jobId) throw new FieldError(this.t.signUpFirst);
         const shared = a.shareSupport === 'yes';
-        await store.apply({ jobId: this.jobId, learnerId, why: str('why'), whyAudio: this.audioRef('why'), shareSupport: shared });
+        await store.apply({ jobId: this.jobId, why: str('why'), whyAudio: this.audioRef('why'), shareSupport: shared });
         this._done = { shared };
         this.emit('lehulu:application-sent', { jobId: this.jobId, supportShared: shared });
       } else {
@@ -505,10 +596,9 @@ export class LehuluSignup extends LitElement {
     const m = this.modes;
     return html`
       <section class="card ${m.big ? 'big' : ''} ${m.tiles ? 'tiles' : ''}" lang=${this._lang} aria-labelledby="${this.uid}-h">
-        ${store.mode === 'local' ? html`<p class="demo">${this.t.demo}</p>` : nothing}
         <p class="step">${this.t.question(i + 1, steps.length)}</p>
         <div class="bar" aria-hidden="true"><span style="width:${Math.round((100 * (i + 1)) / steps.length)}%"></span></div>
-        ${m.tiles && s.icon ? html`<div class="bigicon" aria-hidden="true">${s.icon}</div>` : nothing}
+        ${m.tiles && s.icon ? html`<div class="bigicon" aria-hidden="true">${icon(s.icon, 'i')}</div>` : nothing}
         ${this.renderStep(s)}
         ${this._error ? html`<p id="${this.uid}-err" class="error" role="alert">${this._error}</p>` : nothing}
         ${this.renderNav(i, steps.length)}
@@ -534,15 +624,16 @@ export class LehuluSignup extends LitElement {
     const m = this.modes;
     const force = Boolean(s.alwaysShowMedia);
     const parts: TemplateResult[] = [];
-    if (force || m.playPrompt) {
-      parts.push(html`<div class="row"><button type="button" class="small" @click=${() => this.play(s)}><span aria-hidden="true">🔊</span> ${this.t.play}</button></div>`);
+    // Only buttons that work: a recorded prompt, or the phone's own voice in this language.
+    if ((force || m.playPrompt) && (this.hasPrompt(s) || canSpeak(this._lang))) {
+      parts.push(html`<div class="row"><button type="button" class="small" @click=${() => this.play(s)}>${icon('volume')} ${this.t.play}</button></div>`);
     }
-    if (force || m.signClips) {
+    if ((force || m.signClips) && this._media.sign.includes(s.id)) {
       const key = `sign:${s.id}`;
       if (this._missing.has(key)) {
-        parts.push(html`<p class="meta">🤟 ${this.t.signMissing}</p>`);
+        // The clip is listed but failed to load: show nothing rather than a broken player.
       } else if (m.lazyMedia && !this._signLoaded) {
-        parts.push(html`<div class="row"><button type="button" class="small" @click=${() => (this._signLoaded = true)}><span aria-hidden="true">🤟</span> ${this.t.loadSign}</button></div>`);
+        parts.push(html`<div class="row"><button type="button" class="small" @click=${() => (this._signLoaded = true)}>${icon('hand')} ${this.t.loadSign}</button></div>`);
       } else {
         parts.push(html`<video
           src="${assetsBase()}sign/${s.id}.webm"
@@ -604,7 +695,7 @@ export class LehuluSignup extends LitElement {
                     ?data-first=${k === 0}
                     @change=${(e: Event) => this.choose(s, o.value, (e.target as HTMLInputElement).checked)}
                   />
-                  ${o.icon ? html`<span class="ico" aria-hidden="true">${o.icon}</span>` : nothing}
+                  ${o.icon ? html`<span class="ico" aria-hidden="true">${icon(o.icon)}</span>` : nothing}
                   <span lang=${o.lang ?? nothing}>${text(o.label, lang)}${o.sub ? html`<small>${text(o.sub, lang)}</small>` : nothing}</span>
                 </label>`;
               })}
@@ -651,7 +742,7 @@ export class LehuluSignup extends LitElement {
                   <span class="row">
                     ${this._answers[`${x.id}__audio`]
                       ? html`<button type="button" class="small" aria-label="${this._playing === x.id ? this.t.stopPlaying : this.t.playRec}: ${name}" @click=${() => this.playRecording(x.id)}>
-                          <span aria-hidden="true">${this._playing === x.id ? '⏹' : '▶'}</span> ${this._playing === x.id ? this.t.stopPlaying : this.t.playRec}
+                          ${icon(this._playing === x.id ? 'stop' : 'play')} ${this._playing === x.id ? this.t.stopPlaying : this.t.playRec}
                         </button>`
                       : nothing}
                     <button type="button" class="small" aria-label="${this.t.change}: ${name}" @click=${() => this.edit(x.id)}>${this.t.change}</button>
@@ -677,13 +768,13 @@ export class LehuluSignup extends LitElement {
     const big = this.modes.voiceFirst && !has && !rec;
     return html`<div class="row">
       <button type="button" data-voice class=${big ? 'primary grow' : 'small'} @click=${() => this.toggleVoice(s)}>
-        <span aria-hidden="true">${rec ? '⏹' : '🎤'}</span> ${first}
+        ${icon(rec ? 'stop' : 'mic')} ${first}
       </button>
       ${has && !rec
         ? html`<button type="button" class="small" @click=${() => this.playRecording(s.id)}>
-              <span aria-hidden="true">${this._playing === s.id ? '⏹' : '▶'}</span> ${this._playing === s.id ? t.stopPlaying : t.playMine}
+              ${icon(this._playing === s.id ? 'stop' : 'play')} ${this._playing === s.id ? t.stopPlaying : t.playMine}
             </button>
-            <button type="button" class="small" @click=${() => this.deleteRecording(s)}><span aria-hidden="true">🗑</span> ${t.deleteRec}</button>`
+            <button type="button" class="small" @click=${() => this.deleteRecording(s)}>${icon('trash')} ${t.deleteRec}</button>`
         : nothing}
     </div>`;
   }
@@ -693,26 +784,30 @@ export class LehuluSignup extends LitElement {
     const label = this._returnToReview ? this.t.save : last ? text(this.def.finish, this._lang) || this.t.next : `${this.t.next} →`;
     return html`
       <div class="row">
-        ${i > 0 && !this._returnToReview ? html`<button type="button" class="grow" @click=${this.back}>← ${this.t.back}</button>` : nothing}
+        ${i > 0 && !this._returnToReview ? html`<button type="button" class="grow" @click=${this.back}>${icon('arrowLeft')} ${this.t.back}</button>` : nothing}
         <button type="button" class="primary grow" aria-disabled=${this._busy ? 'true' : nothing} @click=${this.next}>${label}</button>
       </div>
-      ${this.flow === 'signup' && !last ? html`<div class="row"><button type="button" class="small" @click=${this.later}><span aria-hidden="true">💾</span> ${this.t.later}</button></div>` : nothing}
+      ${this.flow === 'signup' && !last ? html`<div class="row"><button type="button" class="small" @click=${this.later}>${icon('save')} ${this.t.later}</button></div>` : nothing}
     `;
   }
 
   private renderDone() {
     const t = this.t;
-    const heading = (s: string) => html`<h2 id="${this.uid}-done" tabindex="-1">${s}</h2>`;
+    const heading = (s: string, describedBy?: string) =>
+      html`<h2 id="${this.uid}-done" tabindex="-1" aria-describedby=${describedBy ?? nothing}>${s}</h2>`;
     if (this.flow === 'signup') {
       const l = this._done!.learner!;
+      // Read together with the heading when focus lands on it: the ID status, and that the site now adapts.
+      const said = [`${this.uid}-id`, l.shareWithHost ? `${this.uid}-adapt` : ''].filter(Boolean).join(' ');
       return html`<section class="card" lang=${this._lang} aria-labelledby="${this.uid}-done">
-        ${heading(t.done.signup)}
-        <p class="ok">${t.idStatus[l.idStatus] ?? ''}</p>
+        ${heading(t.done.signup, said)}
+        <p class="ok" id="${this.uid}-id">${t.idStatus[l.idStatus] ?? ''}</p>
+        ${l.shareWithHost ? html`<p class="ok" id="${this.uid}-adapt">${icon('sparkles')} ${t.adapted}</p>` : nothing}
         <div class="row">
-          <a class="btn primary grow" href=${this.jobsUrl}><span aria-hidden="true">💼</span> ${t.findJobs}</a>
-          <a class="btn grow" href=${this.profileUrl}><span aria-hidden="true">👤</span> ${t.profile}</a>
+          <a class="btn primary grow" href=${this.jobsUrl}>${icon('briefcase')} ${t.findJobs}</a>
+          <a class="btn grow" href=${this.profileUrl}>${icon('user')} ${t.profile}</a>
         </div>
-        <button type="button" @click=${() => this.emit('lehulu:start-lesson', { learnerId: l.id })}><span aria-hidden="true">📘</span> ${t.startLesson}</button>
+        <button type="button" @click=${() => this.emit('lehulu:start-lesson', { learnerId: l.id })}>${icon('book')} ${t.startLesson}</button>
       </section>`;
     }
     if (this.flow === 'apply') {

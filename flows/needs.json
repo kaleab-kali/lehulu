@@ -7,9 +7,11 @@
     { "id": "easy",  "icon": "🖼️", "label": { "en": "Simple words and audio", "am": "ቀላል ቃላትና ድምፅ" }, "request": { "en": "Please use simple words, and audio where possible.", "am": "እባክዎ ቀላል ቃላትና ድምፅ ይጠቀሙ።" } },
     { "id": "big",   "icon": "🔠", "label": { "en": "Large print and big buttons", "am": "ትልቅ ጽሑፍና ትልቅ ቁልፎች" }, "request": { "en": "Please use large print.", "am": "እባክዎ ትልቅ ጽሑፍ ይጠቀሙ።" } },
     { "id": "sign",  "icon": "🤟", "label": { "en": "Sign language interpreter", "am": "የምልክት ቋንቋ አስተርጓሚ" }, "request": { "en": "Please arrange an Ethiopian Sign Language interpreter for the interview.", "am": "እባክዎ ለቃለ መጠይቅ የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ ያዘጋጁ።" } },
+    { "id": "captions", "icon": "🔤", "label": { "en": "Captions on videos and calls", "am": "በቪዲዮና በጥሪ ላይ የጽሑፍ ትርጉም" }, "request": { "en": "Please turn on captions for videos and online calls.", "am": "እባክዎ ለቪዲዮዎችና ለኦንላይን ጥሪዎች የጽሑፍ ትርጉም ያብሩ።" } },
     { "id": "text",  "icon": "💬", "label": { "en": "Contact by text, not calls", "am": "በመልእክት እንጂ በጥሪ አይደለም" }, "request": { "en": "Please contact me by text message, not phone calls.", "am": "እባክዎ በመልእክት ያግኙኝ፤ አይደውሉ።" } },
     { "id": "time",  "icon": "⏳", "label": { "en": "Extra time for tests", "am": "ለፈተና ተጨማሪ ጊዜ" }, "request": { "en": "Please allow extra time for tests.", "am": "እባክዎ ለፈተና ተጨማሪ ጊዜ ይስጡ።" } },
     { "id": "step",  "icon": "♿", "label": { "en": "Step-free building", "am": "ደረጃ የሌለው ሕንፃ" }, "request": { "en": "Please hold the interview in a step-free room.", "am": "እባክዎ ቃለ መጠይቁን ደረጃ በሌለው ክፍል ያድርጉ።" } }
   ],
-  "fromWays": { "listen": ["sr", "time"], "speak": ["voice"], "pictures": ["easy"], "big": ["big", "time"], "sign": ["sign", "text"], "data": [] }
+  "fromWays": { "listen": ["sr", "time"], "speak": ["voice"], "pictures": ["easy"], "big": ["big", "time"], "sign": ["sign", "captions", "text"], "data": [] },
+  "preferNotToSay": { "value": "none", "icon": "🔒", "label": { "en": "Prefer not to say", "am": "መናገር አልፈልግም" } }
 }

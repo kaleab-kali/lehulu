@@ -9,6 +9,10 @@ services:
     env_file:
       - path: .env
         required: false
+    environment:
+      # Demo sign-ins and on-screen SMS codes, so `docker compose up` can be tried without a phone.
+      # Production: DEMO_MODE=false in .env (see .env.example).
+      DEMO_MODE: ${DEMO_MODE:-true}
     ports:
       - "${PORT:-8080}:8080"
     volumes:
