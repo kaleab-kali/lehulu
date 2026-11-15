@@ -1,4 +1,4 @@
-# Lehulu — WCAG 2.2 Level AA conformance report
+# Lehulu: WCAG 2.2 Level AA conformance report
 
 > **How to fill this in:** change every `TO TEST` to one of **Supports**, **Partially supports**, **Does not support** or **Not applicable**, and write what you saw in *Evidence*. Do not mark *Supports* without having tested it: the panel includes a certified accessibility specialist who will check. A truthful *Partially supports* with a known-issue note is better than a false *Supports*.
 
@@ -35,11 +35,11 @@ Out of scope: the Savanna host page itself (it contains known accessibility defe
 |---|---|---|
 | NVDA | _[2025.x]_ | Chrome _[x]_ and Firefox _[x]_, Windows _[x]_ |
 | TalkBack | _[x]_ | Chrome _[x]_, _[phone model]_, Android _[x]_ |
-| Keyboard only | — | Chrome, Firefox |
-| Zoom 200% and 400% reflow (320 CSS px) | — | Chrome desktop |
-| Sound off | — | Phone muted, tasks completed from text only |
+| Keyboard only | | Chrome, Firefox |
+| Zoom 200% and 400% reflow (320 CSS px) | | Chrome desktop |
+| Sound off | | Phone muted, tasks completed from text only |
 | axe-core (Playwright) | _[x]_ | Headless Chromium, every screen and mode |
-| Contrast checker | _[tool]_ | — |
+| Contrast checker | _[tool]_ | |
 
 ## 4. Method
 
@@ -51,7 +51,7 @@ Out of scope: the Savanna host page itself (it contains known accessibility defe
 
 Status key: **S** Supports · **PS** Partially supports · **DNS** Does not support · **N/A** Not applicable.
 
-### Principle 1 — Perceivable
+### Principle 1: Perceivable
 
 | SC | Name | Level | Status | Evidence / how Lehulu meets it |
 |---|---|---|---|---|
@@ -76,7 +76,7 @@ Status key: **S** Supports · **PS** Partially supports · **DNS** Does not supp
 | 1.4.12 | Text Spacing | AA | TO TEST | Tested with the text-spacing bookmarklet (line height 1.5, letter 0.12em, word 0.16em, paragraph 2em): no clipping, including Ethiopic. |
 | 1.4.13 | Content on Hover or Focus | AA | TO TEST | Expected N/A: no tooltips or hover pop-ups. |
 
-### Principle 2 — Operable
+### Principle 2: Operable
 
 | SC | Name | Level | Status | Evidence / how Lehulu meets it |
 |---|---|---|---|---|
@@ -101,7 +101,7 @@ Status key: **S** Supports · **PS** Partially supports · **DNS** Does not supp
 | 2.5.7 | Dragging Movements | AA | TO TEST | No drag interactions. The date uses dropdowns, not a slider or picker wheel. |
 | 2.5.8 | Target Size (Minimum) | AA | TO TEST | All targets ≥ 44×44 CSS px (above the 24×24 requirement). Big-and-simple mode ≥ 60 px. |
 
-### Principle 3 — Understandable
+### Principle 3: Understandable
 
 | SC | Name | Level | Status | Evidence / how Lehulu meets it |
 |---|---|---|---|---|
@@ -119,7 +119,7 @@ Status key: **S** Supports · **PS** Partially supports · **DNS** Does not supp
 | 3.3.7 | Redundant Entry | A | TO TEST | Name and phone from sign-up are filled into job applications. Support needs pre-fill the job filter. |
 | 3.3.8 | Accessible Authentication (Minimum) | AA | TO TEST | No password, CAPTCHA or memory test. Learners sign in with their phone number and a texted code (`autocomplete="one-time-code"`, so Android can fill it; paste allowed; 24 h to use it). Staff client secrets accept paste and password managers (`autocomplete="current-password"`). |
 
-### Principle 4 — Robust
+### Principle 4: Robust
 
 | SC | Name | Level | Status | Evidence / how Lehulu meets it |
 |---|---|---|---|---|

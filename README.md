@@ -3,7 +3,7 @@
 Track 1, Accessible onboarding · Digital Bridge Accessibility Hackathon 2026.
 Team: _add names_ · Co-designer: _add name_
 
-![Lehulu front page](docs/screenshots/01-home.jpg)
+![Lehulu front page](docs/screenshots/00-front-page.jpg)
 
 ## What it does
 
@@ -12,17 +12,18 @@ tag. A learner signs up one question at a time, by typing or by voice, in Amhari
 ID document. Instead of asking about disability, it asks how the learner uses their phone, adapts every screen to
 that answer, and (only if the learner agrees) lets the host platform adapt too.
 
-| Sign-up adapts to the learner | Amharic, by voice, on a phone | Success, and the site adapts |
+| Support, with Prefer not to say | Amharic on a phone | Success, and the site adapts |
 |---|---|---|
-| ![Support step with pre-ticked choices and Prefer not to say](docs/screenshots/03-signup-support.jpg) | ![Amharic name question with a large voice button](docs/screenshots/11-phone-amharic-pictures.jpg) | ![Account ready, ID waiting for partner, site adapted](docs/screenshots/04-signup-done.jpg) |
+| ![Support step with pre-ticked choices and Prefer not to say](docs/screenshots/09-support-prefer-not-to-say.jpg) | ![Amharic name question with a large voice button](docs/screenshots/07-amharic.jpg) | ![Account ready, ID waiting for partner, site adapted](docs/screenshots/11-done-site-adapts.jpg) |
 
 | Jobs sorted by the support you need | Partner (AAAPD) | Employer |
 |---|---|---|
-| ![Jobs and profile](docs/screenshots/05-jobs.jpg) | ![Partner requests and register a learner](docs/screenshots/07-partner.jpg) | ![Employer posts a job and reads an application](docs/screenshots/08-employer.jpg) |
+| ![Jobs and profile](docs/screenshots/12-jobs-sorted-by-support.jpg) | ![Partner requests and register a learner](docs/screenshots/18-partner-confirms.jpg) | ![Employer posts a job and reads an application](docs/screenshots/19-employer.jpg) |
 
-Inside the real Savanna page, in Savanna's colours:
+Inside the real Savanna page, in Savanna's colours. Screenshots of every kind of disability and every
+situation are in [docs/TESTING.md](docs/TESTING.md).
 
-![Lehulu inside the ALX Savanna dashboard](docs/screenshots/09-savanna.jpg)
+![Lehulu inside the ALX Savanna dashboard](docs/screenshots/21-inside-savanna.jpg)
 
 ## The main task we tested
 
@@ -57,6 +58,9 @@ accounts and on-screen codes then disappear.
 | http://localhost:8080/blank.html | The module alone on an empty page with no host styles |
 | http://localhost:8080/docs | Interactive API documentation |
 | http://localhost:8080/savanna/ | Inside the real Savanna pages, after `bash scripts/import-savanna-starter.sh` |
+
+**How to test for each kind of disability** (blind, low vision, motor, low literacy, Deaf, little data), with
+what should happen and pictures: [docs/TESTING.md](docs/TESTING.md). The same list is on the front page.
 
 ### Walk through it
 

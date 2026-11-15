@@ -280,7 +280,7 @@ class ApiStore implements DataStore {
   }
 }
 
-// ---------- Demo mode: everything stays in this browser ----------
+// ---------- Browser-only mode (the static site): everything stays in this browser ----------
 
 interface LocalDb {
   learners: Learner[];
@@ -380,7 +380,7 @@ class LocalStore implements DataStore {
         const j = db.jobs.find((x) => x.id === a.jobId);
         return { jobId: a.jobId, jobTitle: j?.title ?? '', org: j?.org ?? '', why: a.why || null, whyAudio: a.whyAudio ?? null, supportShared: a.shareSupport, createdAt: a.createdAt };
       }),
-      note: 'Demo mode: everything is kept in this browser only.',
+      note: 'This copy of Lehulu keeps everything in this browser only.',
     };
   }
   async deleteMe() {

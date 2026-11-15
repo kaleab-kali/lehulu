@@ -5,21 +5,21 @@ import { css } from 'lit';
 // field borders and focus rings, in both themes (checked when the palette was chosen).
 export const base = css`
   :host {
-    --accent: var(--lehulu-accent, #6a4bf0);
+    --accent: var(--lehulu-accent, #0e5e70);
     --accent-fg: var(--lehulu-accent-fg, #ffffff);
-    --accent-2: var(--lehulu-accent-2, #9b84ff); /* decorative only (progress bar end) */
+    --accent-2: var(--lehulu-accent-2, #0e5e70);
     --bg: var(--lehulu-bg, #ffffff);
-    --raise: var(--lehulu-raise, #f6f6fa);
-    --fg: var(--lehulu-fg, var(--bs-body-color, #16151d));
-    --muted: var(--lehulu-muted, #5a5b6b);
-    --line: var(--lehulu-line, #8b8d9c); /* field borders: 3.3:1 on white */
-    --hair: var(--lehulu-hair, #e6e6ee); /* card edges: decorative */
-    --soft: var(--lehulu-soft, #efeaff);
+    --raise: var(--lehulu-raise, #f4f6f6);
+    --fg: var(--lehulu-fg, var(--bs-body-color, #15202b));
+    --muted: var(--lehulu-muted, #55606a);
+    --line: var(--lehulu-line, #7c8790); /* field borders: 3.7:1 on white */
+    --hair: var(--lehulu-hair, #e3e6e8); /* card edges: decorative */
+    --soft: var(--lehulu-soft, #e3eff1);
     --ok: var(--lehulu-ok, #146c43);
     --ok-soft: var(--lehulu-ok-soft, #e3f5ea);
     --bad: var(--lehulu-bad, #b42318);
     --bad-soft: var(--lehulu-bad-soft, #fdecea);
-    --focus: var(--lehulu-focus, #c2410c);
+    --focus: var(--lehulu-focus, #b45309);
     --shadow: 0 1px 2px rgba(22, 21, 29, 0.04), 0 10px 30px rgba(22, 21, 29, 0.06);
     --radius: var(--lehulu-radius, 24px);
     display: block;
@@ -32,16 +32,16 @@ export const base = css`
   :host(:lang(am)), [lang='am'] { line-height: 1.7; }
   @media (prefers-color-scheme: dark) {
     :host(:not([theme='light'])) {
-      --accent: var(--lehulu-accent, #b9a6ff);
-      --accent-fg: var(--lehulu-accent-fg, #17132b);
-      --accent-2: var(--lehulu-accent-2, #7b61f5);
-      --bg: var(--lehulu-bg, #1c1b24);
-      --raise: var(--lehulu-raise, #24232e);
-      --fg: var(--lehulu-fg, #ecebf3);
-      --muted: var(--lehulu-muted, #b3b2c4);
-      --line: var(--lehulu-line, #787a8c);
-      --hair: var(--lehulu-hair, #2e2d3a);
-      --soft: var(--lehulu-soft, #2a2440);
+      --accent: var(--lehulu-accent, #7fcbdc);
+      --accent-fg: var(--lehulu-accent-fg, #0b1f24);
+      --accent-2: var(--lehulu-accent-2, #7fcbdc);
+      --bg: var(--lehulu-bg, #1a2227);
+      --raise: var(--lehulu-raise, #212b30);
+      --fg: var(--lehulu-fg, #ecf0f2);
+      --muted: var(--lehulu-muted, #a9b4bc);
+      --line: var(--lehulu-line, #76838c);
+      --hair: var(--lehulu-hair, #2c373d);
+      --soft: var(--lehulu-soft, #173840);
       --ok: var(--lehulu-ok, #7fd8a6);
       --ok-soft: var(--lehulu-ok-soft, #18301f);
       --bad: var(--lehulu-bad, #ff9b8f);
@@ -52,16 +52,16 @@ export const base = css`
     }
   }
   :host([theme='dark']) {
-    --accent: var(--lehulu-accent, #b9a6ff);
-    --accent-fg: var(--lehulu-accent-fg, #17132b);
-    --accent-2: var(--lehulu-accent-2, #7b61f5);
-    --bg: var(--lehulu-bg, #1c1b24);
-    --raise: var(--lehulu-raise, #24232e);
-    --fg: var(--lehulu-fg, #ecebf3);
-    --muted: var(--lehulu-muted, #b3b2c4);
-    --line: var(--lehulu-line, #787a8c);
-    --hair: var(--lehulu-hair, #2e2d3a);
-    --soft: var(--lehulu-soft, #2a2440);
+    --accent: var(--lehulu-accent, #7fcbdc);
+    --accent-fg: var(--lehulu-accent-fg, #0b1f24);
+    --accent-2: var(--lehulu-accent-2, #7fcbdc);
+    --bg: var(--lehulu-bg, #1a2227);
+    --raise: var(--lehulu-raise, #212b30);
+    --fg: var(--lehulu-fg, #ecf0f2);
+    --muted: var(--lehulu-muted, #a9b4bc);
+    --line: var(--lehulu-line, #76838c);
+    --hair: var(--lehulu-hair, #2c373d);
+    --soft: var(--lehulu-soft, #173840);
     --ok: var(--lehulu-ok, #7fd8a6);
     --ok-soft: var(--lehulu-ok-soft, #18301f);
     --bad: var(--lehulu-bad, #ff9b8f);
@@ -75,7 +75,7 @@ export const base = css`
   /* ---- surfaces ---- */
   .card {
     background: var(--bg); border: 1px solid var(--hair); border-radius: var(--radius);
-    box-shadow: var(--shadow); padding: clamp(1rem, 4vw, 1.75rem); display: grid; gap: 1rem;
+    box-shadow: var(--shadow); padding: clamp(1.1rem, 4vw, 2rem); display: grid; gap: 1.1rem;
   }
   /* a card inside a card (job, request, application) is a flat tile */
   .card .card { background: var(--raise); box-shadow: none; border-radius: 18px; padding: 1rem 1.1rem; }
@@ -106,7 +106,7 @@ export const base = css`
 
   /* ---- progress ---- */
   .bar { height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden; }
-  .bar > span { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+  .bar > span { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
 
   /* ---- fields ---- */
   label.field-label { font-weight: 600; }
@@ -115,8 +115,10 @@ export const base = css`
     border: 1.5px solid var(--line); border-radius: 14px; padding: 0.7rem 0.9rem; min-height: 52px; width: 100%;
   }
   [aria-invalid='true'] { border-color: var(--bad) !important; border-width: 2px !important; }
-  fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
-  legend { padding: 0; margin-bottom: 0.75rem; }
+  /* Even vertical rhythm inside a question: heading, play button, hint, then the choices. */
+  fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 0.9rem; }
+  legend { padding: 0; margin-bottom: 0.9rem; }
+  legend h2 { margin-bottom: 0.1rem; }
   .choices { display: grid; gap: 0.6rem; }
   .choice {
     display: flex; gap: 0.8rem; align-items: center; padding: 0.75rem 0.9rem; min-height: 56px;

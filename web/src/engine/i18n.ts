@@ -11,7 +11,7 @@ const UI = {
     question: (i: number, n: number) => `Question ${i} of ${n}`,
     next: 'Next', back: 'Back', save: 'Save', later: 'Continue later', change: 'Change', optional: 'optional',
     voice: 'Answer by voice', stop: 'Stop recording', recording: 'Recording. Press “Stop recording” when you finish.',
-    recorded: (s: number) => `Recording saved (${s} seconds). It counts as your answer. You can also type it.`,
+    recorded: (s: number) => `Recording saved (${s} ${s === 1 ? 'second' : 'seconds'}). It counts as your answer. You can also type it.`,
     micBlocked: 'The microphone is not available here. Please type your answer.',
     reRecord: 'Record again', playMine: 'Play my recording', stopPlaying: 'Stop playing', playing: 'Playing your recording.',
     playRec: 'Play recording', deleteRec: 'Delete recording', deleted: 'Recording deleted.', savingRec: 'Saving your recording…',
@@ -23,7 +23,7 @@ const UI = {
     resumeMissing: 'We could not find answers for that link. They may be older than a year. Please start again; it only takes a few minutes.',
     day: 'Day', month: 'Month', year: 'Year (Ethiopian calendar)', gregorian: (t: string) => `That is ${t} in the Gregorian calendar.`,
     none: 'None', saved: (code: string) => `Saved. To continue later, use code ${code}. There is no time limit.`,
-    restored: 'We restored the answers you saved earlier.', demo: 'Demo mode: your answers stay in this browser only.',
+    restored: 'We restored the answers you saved earlier.',
     done: { signup: 'Your account is ready', apply: 'Application sent', employer: 'Job posted' },
     idStatus: {
       not_given: 'ID: not given yet. Learning is not blocked.',
@@ -53,7 +53,7 @@ const UI = {
     resumeMissing: 'ለዚህ ማስፈንጠሪያ መልሶችን ማግኘት አልቻልንም። ከአንድ ዓመት በላይ የቆዩ ሊሆኑ ይችላሉ። እባክዎ እንደገና ይጀምሩ፤ ጥቂት ደቂቃዎች ብቻ ይወስዳል።',
     day: 'ቀን', month: 'ወር', year: 'ዓመት (ኢ.ዓ.)', gregorian: (t: string) => `በፈረንጅ አቆጣጠር ${t} ነው።`,
     none: 'ምንም', saved: (code: string) => `ተቀምጧል። በኋላ ለመቀጠል ኮድ ${code} ይጠቀሙ። የጊዜ ገደብ የለም።`,
-    restored: 'ቀደም ብለው ያስቀመጧቸውን መልሶች መልሰናል።', demo: 'የሙከራ ዘዴ፦ መልሶችዎ በዚህ ብሮውዘር ብቻ ይቀመጣሉ።',
+    restored: 'ቀደም ብለው ያስቀመጧቸውን መልሶች መልሰናል።',
     done: { signup: 'መለያዎ ተፈጥሯል', apply: 'ማመልከቻ ተልኳል', employer: 'ሥራው ተለጥፏል' },
     idStatus: {
       not_given: 'መታወቂያ፦ ገና አልተሰጠም። መማር አይከለከልም።',

@@ -1,20 +1,18 @@
-/* Styles for the demo host pages only (the component styles itself inside its shadow DOM). */
+/* Styles for Lehulu's own pages. The component styles itself inside its shadow root. */
 :root {
-  --canvas: #eef0f5; --fg: #16151d; --muted: #5a5b6b; --surface: rgba(255, 255, 255, 0.82); --hair: #e2e3eb;
-  --accent: #6a4bf0; --accent-fg: #ffffff; --soft: #efeaff; --focus: #c2410c; color-scheme: light;
+  --canvas: #f5f4f0; --fg: #15202b; --muted: #55606a; --surface: #ffffff; --hair: #e3e6e8;
+  --accent: #0e5e70; --accent-fg: #ffffff; --soft: #e3eff1; --focus: #b45309; color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --canvas: #121118; --fg: #ecebf3; --muted: #b3b2c4; --surface: rgba(28, 27, 36, 0.85); --hair: #2e2d3a;
-    --accent: #b9a6ff; --accent-fg: #17132b; --soft: #2a2440; --focus: #ffb547; color-scheme: dark;
+    --canvas: #12191d; --fg: #ecf0f2; --muted: #a9b4bc; --surface: #1a2227; --hair: #2c373d;
+    --accent: #7fcbdc; --accent-fg: #0b1f24; --soft: #173840; --focus: #ffb547; color-scheme: dark;
   }
 }
 * { box-sizing: border-box; }
 html.lehulu-big { font-size: 125%; } /* the host reacting to the lehulu:preferences event */
 body {
   margin: 0; color: var(--fg); min-height: 100vh; background-color: var(--canvas);
-  background-image:
-    radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%);
   font: 1rem/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Ethiopic', sans-serif;
 }
 a { color: var(--accent); text-underline-offset: 0.18em; }
@@ -26,14 +24,14 @@ a { color: var(--accent); text-underline-offset: 0.18em; }
 .topbar {
   position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center;
   margin: 12px max(12px, env(safe-area-inset-left)) 0; padding: .55rem .75rem .55rem 1rem;
-  background: var(--surface); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: var(--surface); 
   border: 1px solid var(--hair); border-radius: 20px; box-shadow: 0 6px 24px rgba(22, 21, 29, .06);
 }
 .topbar .brand { display: inline-flex; align-items: center; gap: .55rem; font-size: 1.1rem; font-weight: 700;
   letter-spacing: -.01em; color: var(--fg); text-decoration: none; min-height: 44px; }
 .topbar .brand::before {
-  content: ''; width: 1.6rem; height: 1.6rem; border-radius: 8px; flex: none;
-  background: linear-gradient(135deg, #9b84ff, #6a4bf0);
+  content: 'ለ'; width: 2rem; height: 2rem; border-radius: 10px; flex: none; display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-fg); font-size: 1.1rem; font-weight: 700;
 }
 .topbar nav { display: flex; gap: .35rem; flex-wrap: wrap; margin-left: auto; }
 .topbar nav a {
@@ -52,15 +50,16 @@ a { color: var(--accent); text-underline-offset: 0.18em; }
 main { max-width: 36rem; margin: 0 auto; padding: 2rem max(16px, env(safe-area-inset-left)) 4rem; display: grid; gap: 1.25rem; }
 main.wide { max-width: 72rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr)); align-items: start; }
 main.wide > h1, main.wide > p, main.wide > lehulu-employer { grid-column: 1 / -1; }
+main.home > section > h2 { margin: 0 0 .75rem; }
+main.home > section > p { margin: .75rem 0 0; }
 .small { font-size: .9rem; }
 
 /* ---- front page ---- */
 main.home { max-width: 72rem; gap: 2rem; }
 .hero {
-  background: var(--surface); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: var(--surface); 
   border: 1px solid var(--hair); border-radius: 32px; padding: clamp(1.5rem, 5vw, 3.25rem);
   box-shadow: 0 10px 40px rgba(22, 21, 29, .07); display: grid; gap: 1rem;
-  background-image: radial-gradient(40rem 20rem at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%);
 }
 .hero h1 { font-size: clamp(2.2rem, 1.4rem + 3.6vw, 3.6rem); max-width: 16ch; }
 .eyebrow { margin: 0; color: var(--accent); font-weight: 700; letter-spacing: .02em; }
@@ -89,6 +88,26 @@ main.home h2 { margin: 0 0 1rem; font-size: 1.6rem; font-weight: 600; }
   width: 2.75rem; height: 2.75rem; padding: .6rem; border-radius: 14px; background: var(--soft); color: var(--accent);
   fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
 }
+.table-wrap { background: var(--surface); border: 1px solid var(--hair); border-radius: 20px; }
+table.tests { width: 100%; border-collapse: collapse; }
+table.tests th, table.tests td { text-align: start; vertical-align: top; padding: .85rem 1rem; border-bottom: 1px solid var(--hair); }
+table.tests thead th { font-size: .9rem; color: var(--muted); }
+table.tests tbody tr:last-child > * { border-bottom: 0; }
+table.tests tbody th { white-space: nowrap; }
+table.tests td:nth-child(2) { font-weight: 600; color: var(--accent); }
+/* Narrow screens and high zoom: each row becomes a small card, with its column name in front of each cell. */
+@media (max-width: 52rem) {
+  table.tests thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  table.tests, table.tests tbody, table.tests tr, table.tests th, table.tests td { display: block; }
+  table.tests tr { padding: 1rem 1.1rem; border-bottom: 1px solid var(--hair); }
+  table.tests tbody tr:last-child { border-bottom: 0; }
+  table.tests th, table.tests td { padding: .2rem 0; border: 0; }
+  table.tests tbody th { white-space: normal; font-size: 1.05rem; }
+  table.tests td::before { content: attr(data-label) ': '; font-weight: 600; color: var(--muted); }
+}
+main.home > section { min-width: 0; }
+.note { background: var(--surface); border: 1px solid var(--hair); border-inline-start: 6px solid var(--accent); border-radius: 20px; padding: 1.25rem 1.5rem; }
+.note ul { margin: 0; padding-inline-start: 1.2rem; display: grid; gap: .5rem; }
 .install { display: grid; gap: .75rem; }
 .install pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .install h2 { margin: 0 !important; }

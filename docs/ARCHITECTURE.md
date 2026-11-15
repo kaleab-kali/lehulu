@@ -228,7 +228,7 @@ CREATE TABLE consent_log (
 
 ---
 
-## 5. API (v1) — as built
+## 5. API (v1): as built
 
 | Method | Path | What | Who may call |
 |---|---|---|---|
@@ -253,7 +253,7 @@ CREATE TABLE consent_log (
 | GET | `/v1/partners/{id}/vouches` | Learners waiting for confirmation | that partner |
 | POST | `/v1/partners/{id}/vouches/{learnerId}` | `{ "decision": "confirm" \| "decline" }` | that partner |
 | POST | `/v1/partners/{id}/registrations` | Register a learner who is present; account made only when they enter the texted code | that partner |
-| GET | `/healthz` · `/openapi.json` · `/docs` · `/dev/sms` | Health, spec, Swagger UI, SMS simulator (DEMO_MODE only) | — |
+| GET | `/healthz` · `/openapi.json` · `/docs` · `/dev/sms` | Health, spec, Swagger UI, SMS simulator (DEMO_MODE only) | |
 
 **Security as built.** Tokens are 32 random bytes; only their SHA-256 is stored (also for SMS codes, max 5 tries
 and 5 codes a day per number). Learner sessions never expire (no time limits) and end on sign-out or deletion.
@@ -309,39 +309,3 @@ Every error: `{ "error": { "code": "...", "message": "plain words + how to fix",
 - No analytics or third-party scripts. Retention set by `RETENTION_DAYS`.
 
 ---
-
-## 9. Build order: features step by step
-
-**Live status is in [FEATURES.md](FEATURES.md).** The scaffold already includes F0–F6, F10, F11, F14, F15, F19, F20 and F22.
-
-Estimates are for a person working with an AI coding assistant, including review and a TalkBack check. **Done** means it passes keyboard, NVDA or TalkBack, and axe.
-
-| # | Feature | Owner | Depends on | Est. | Done when |
-|---|---|---|---|---|---|
-| F0 | Repo, CI, Pages workflow, Savanna page with script tag | D | — | 1 h | Empty component shows on the live link |
-| F1 | Flow file format + `needs.json` + `signup.json` | B + A | — | 0.5 h | Team agrees, both sides load it |
-| F2 | Question screen: heading, hint, text/tel, errors, Back/Next, focus | B | F1 | 2 h | TalkBack reads question, label, error |
-| F3 | Choice, checks, Ethiopian-calendar date, review with Change | B | F2 | 2 h | Main sign-up completes by keyboard |
-| F4 | `DataStore` with LocalStore, autosave + continue later | B | F2 | 1 h | Reload keeps answers; no timers |
-| F5 | Server skeleton: config, errors, SQLite, migrations, healthcheck, Docker | A | — | 1.5 h | `docker compose up` serves the page |
-| F6 | Learners + drafts API, OpenAPI `/docs` | A | F5 | 1.5 h | Sign-up saved in SQLite through ApiStore |
-| F7 | Access modes: listen, big, speak (voice-first) | B | F3 | 2 h | Same flow behaves differently per first answer |
-| F8 | Voice button (MediaRecorder, read-back, edit) + upload | B + A | F2, F6 | 1.5 h | Recording saved; text editable |
-| F9 | Pictures mode + play button + recorded Amharic prompts | C | F7 | 2 h | Low-literacy path works with and without sound |
-| F10 | ID routes + partner vouch API + partner screen | A + C | F6 | 2 h | Vouch request confirmed from `/partner` |
-| F11 | Support needs pre-ticked from ways | B | F7 | 0.5 h | Needs match first answer, editable |
-| F12 | Profile view: edit, add ID later, delete | B + A | F6 | 1.5 h | Change one answer and it saves |
-| F13 | Jobs API + JSON-LD + employer form + OAuth token | A | F6 | 2 h | Posted job appears in learner list; JSON-LD validates |
-| F14 | Job list with on-device filter + live count | B | F13 | 1 h | Count announced; titles are headings |
-| F15 | Apply flow (reuse engine), share yes/no, employer view | B + A | F8, F13 | 1.5 h | Employer sees needs only when shared |
-| F16 | Sign mode: interpreter clips, lazy-load in data-saver | C | F7 | 1.5 h | Clip per sign-up question, text always shown |
-| F17 | Amharic interface + `lang` attributes | C | F3 | 1 h | NVDA switches voice on Amharic |
-| F18 | SMS simulator + “continue later” link + partner register-with-consent | A | F6 | 1.5 h | Code at `/dev/sms` completes consent |
-| F19 | Host events (`lehulu:preferences`) shown on Savanna page | B | F7 | 0.5 h | Savanna page enlarges text when “big” chosen |
-| F20 | Playwright main task in every mode + axe gate | D | F3 → | 3 h (rolling) | CI red on any serious/critical issue |
-| F21 | README, conformance report, pitch deck, cold install test | D | all | 3 h | A stranger installs from README in < 1 h |
-| — | Stretch: voice-only mode, speech-to-text (whisper-rs), offline queue, Telegram | — | — | — | Only after F0–F21 pass |
-
-**Must-have path (fail the gate or miss a requirement without it):** F0–F15, F20, F21 ≈ 30 h.
-**Should-have:** F16–F19 ≈ 4.5 h.
-**Total ≈ 34 person-hours of building.** Plan for about 45 with fixes from co-designer tests. Four people have about 50 build hours across the two days, so it fits only if the stretch list stays cut.

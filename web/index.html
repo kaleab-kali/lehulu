@@ -77,8 +77,42 @@
             </a>
           </li>
         </ul>
-        <p class="muted small">This is a test system: sign-in codes appear on screen instead of by SMS, and the
-          partner and employer screens offer one-tap test accounts. Nothing here is real data.</p>
+      </section>
+
+      <section aria-labelledby="test-h">
+        <h2 id="test-h">How to test it</h2>
+        <p class="muted">Start at <a href="signup/">Sign up</a>. The second question, “How do you use your phone?”,
+          changes every screen after it. Pick what matches the person testing, or try each one in turn.</p>
+        <div class="table-wrap">
+          <table class="tests">
+            <thead><tr><th scope="col">If the person…</th><th scope="col">Choose</th><th scope="col">What should happen</th><th scope="col">Test with</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">is blind</th><td data-label="Choose">I listen (screen reader)</td><td data-label="What should happen">Each new question is read out. Errors are read out and the cursor goes back to the field. Extra time is pre-ticked.</td><td data-label="Test with">TalkBack (Android), VoiceOver (iPhone), NVDA or Narrator (Windows)</td></tr>
+              <tr><th scope="row">has low vision</th><td data-label="Choose">Big and simple</td><td data-label="What should happen">Larger text and 60-pixel buttons. Works at 200% zoom and on a 320-pixel screen with no sideways scrolling.</td><td data-label="Test with">Phone text size at maximum, or browser zoom (Ctrl and +)</td></tr>
+              <tr><th scope="row">cannot type easily, or has a motor disability</th><td data-label="Choose">I speak my answers</td><td data-label="What should happen">A large “Answer by voice” button comes first. The recording is the answer; no typing needed. No time limits, no dragging.</td><td data-label="Test with">Keyboard only (Tab, Enter, Space), or Switch Access</td></tr>
+              <tr><th scope="row">reads little, or not at all</th><td data-label="Choose">Pictures and audio, few words</td><td data-label="What should happen">Choices become large picture tiles, and “Play question” reads the question aloud.</td><td data-label="Test with">The phone with sound on</td></tr>
+              <tr><th scope="row">is Deaf</th><td data-label="Choose">Sign language</td><td data-label="What should happen">Every question stays as written text; nothing needs sound. Sign language videos appear where they have been recorded.</td><td data-label="Test with">The phone with sound off</td></tr>
+              <tr><th scope="row">has little mobile data</th><td data-label="Choose">Save my data</td><td data-label="What should happen">Videos wait until tapped. The page is about 110 KB and works offline after the first visit.</td><td data-label="Test with">Airplane mode after the first load</td></tr>
+              <tr><th scope="row">has no ID document</th><td data-label="Choose">“No document. A partner can vouch for me”</td><td data-label="What should happen">Sign-up still finishes. The partner confirms them on the <a href="partner/">Partner</a> screen.</td><td data-label="Test with">Any phone</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted">Every answer is kept as it is given. Close the page half-way, open it again, and the answers
+          are still there.</p>
+      </section>
+
+      <section class="note" aria-labelledby="sys-h">
+        <h2 id="sys-h">About this test system</h2>
+        <ul>
+          <li><strong>Sign-in codes are shown on screen.</strong> On a real system they arrive by SMS. Everything else
+            works the same way.</li>
+          <li><strong>Partner and employer screens offer one-tap test accounts.</strong> On a real system each
+            organisation gets its own login.</li>
+          <li><strong>Not included yet:</strong> recorded Amharic question audio and Ethiopian Sign Language videos (they
+            must be recorded by people), and a connection to a real SMS company. Until the audio is recorded, “Play
+            question” uses the phone’s own voice where it has one for the language, and is hidden otherwise.</li>
+          <li><strong>Everything here is test data.</strong> Use any name and a number like 0911 234 567.</li>
+        </ul>
       </section>
 
       <section class="install" aria-labelledby="install-h">
