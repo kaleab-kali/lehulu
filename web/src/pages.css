@@ -1,12 +1,12 @@
 /* Styles for Lehulu's own pages. The component styles itself inside its shadow root. */
 :root {
-  --canvas: #f5f4f0; --fg: #15202b; --muted: #55606a; --surface: #ffffff; --hair: #e3e6e8;
-  --accent: #0e5e70; --accent-fg: #ffffff; --soft: #e3eff1; --focus: #b45309; color-scheme: light;
+  --canvas: #f7f8fb; --fg: #111827; --muted: #4b5563; --surface: #ffffff; --hair: #e5e7eb;
+  --accent: #1d4ed8; --accent-fg: #ffffff; --soft: #e8efff; --focus: #c2410c; color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --canvas: #12191d; --fg: #ecf0f2; --muted: #a9b4bc; --surface: #1a2227; --hair: #2c373d;
-    --accent: #7fcbdc; --accent-fg: #0b1f24; --soft: #173840; --focus: #ffb547; color-scheme: dark;
+    --canvas: #0f131b; --fg: #eef1f6; --muted: #aab3c2; --surface: #161b26; --hair: #2a3344;
+    --accent: #93b4ff; --accent-fg: #0b1530; --soft: #1c2a4a; --focus: #ffb547; color-scheme: dark;
   }
 }
 * { box-sizing: border-box; }
@@ -71,10 +71,6 @@ main.home { max-width: 72rem; gap: 2rem; }
   background: var(--surface); border: 1.5px solid var(--hair);
 }
 .button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-.facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
-.facts li { background: var(--surface); border: 1px solid var(--hair); border-radius: 24px; padding: 1.1rem 1.25rem; display: grid; gap: .2rem; }
-.facts strong { font-size: 2.6rem; line-height: 1.05; color: var(--accent); letter-spacing: -.02em; }
-.facts span { color: var(--muted); font-weight: 600; }
 main.home h2 { margin: 0 0 1rem; font-size: 1.6rem; font-weight: 600; }
 .tiles { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
 .tiles a {
@@ -88,27 +84,22 @@ main.home h2 { margin: 0 0 1rem; font-size: 1.6rem; font-weight: 600; }
   width: 2.75rem; height: 2.75rem; padding: .6rem; border-radius: 14px; background: var(--soft); color: var(--accent);
   fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
 }
-.table-wrap { background: var(--surface); border: 1px solid var(--hair); border-radius: 20px; }
-table.tests { width: 100%; border-collapse: collapse; }
-table.tests th, table.tests td { text-align: start; vertical-align: top; padding: .85rem 1rem; border-bottom: 1px solid var(--hair); }
-table.tests thead th { font-size: .9rem; color: var(--muted); }
-table.tests tbody tr:last-child > * { border-bottom: 0; }
-table.tests tbody th { white-space: nowrap; }
-table.tests td:nth-child(2) { font-weight: 600; color: var(--accent); }
-/* Narrow screens and high zoom: each row becomes a small card, with its column name in front of each cell. */
-@media (max-width: 52rem) {
-  table.tests thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  table.tests, table.tests tbody, table.tests tr, table.tests th, table.tests td { display: block; }
-  table.tests tr { padding: 1rem 1.1rem; border-bottom: 1px solid var(--hair); }
-  table.tests tbody tr:last-child { border-bottom: 0; }
-  table.tests th, table.tests td { padding: .2rem 0; border: 0; }
-  table.tests tbody th { white-space: normal; font-size: 1.05rem; }
-  table.tests td::before { content: attr(data-label) ': '; font-weight: 600; color: var(--muted); }
-}
-main.home > section { min-width: 0; }
-.note { background: var(--surface); border: 1px solid var(--hair); border-inline-start: 6px solid var(--accent); border-radius: 20px; padding: 1.25rem 1.5rem; }
-.note ul { margin: 0; padding-inline-start: 1.2rem; display: grid; gap: .5rem; }
 .install { display: grid; gap: .75rem; }
+.install p { margin: 0; }
+main.home > section { min-width: 0; }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: .75rem; }
+.steps li {
+  counter-increment: step; position: relative; padding: 1rem 1.25rem 1rem 4rem; border-radius: 20px;
+  background: var(--surface); border: 1px solid var(--hair); color: var(--muted);
+}
+.steps li strong { color: var(--fg); display: block; margin-bottom: .15rem; }
+.steps li::before {
+  content: counter(step); position: absolute; left: 1.1rem; top: 1rem; width: 2rem; height: 2rem; border-radius: 50%;
+  display: grid; place-items: center; background: var(--accent); color: var(--accent-fg); font-weight: 700;
+}
+.tiles.plain li { display: grid; gap: .4rem; align-content: start; padding: 1.25rem 1.4rem; border-radius: 24px;
+  background: var(--surface); border: 1px solid var(--hair); }
+.tiles.plain strong { font-size: 1.1rem; }
 .install pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .install h2 { margin: 0 !important; }
 h1 { margin: 0; font-size: clamp(2rem, 1.4rem + 2.4vw, 2.75rem); line-height: 1.1; font-weight: 600; letter-spacing: -.02em; }

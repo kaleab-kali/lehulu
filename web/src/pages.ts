@@ -8,6 +8,16 @@ document.addEventListener('lehulu:preferences', (e) => {
   adaptPage((e as CustomEvent).detail, { jobsUrl: `${base}jobs/`, noteIn: document.getElementById('host-note') ? '#host-note' : 'main' });
 });
 
+// The page around the sign-up follows the language the learner chose.
+document.addEventListener('lehulu:language', (e) => {
+  const lang = (e as CustomEvent<{ language: 'am' | 'en' }>).detail.language;
+  document.documentElement.lang = lang;
+  document.querySelectorAll<HTMLElement>('[data-am]').forEach((el) => {
+    el.dataset.en ??= el.textContent ?? '';
+    el.textContent = lang === 'am' ? el.dataset.am! : el.dataset.en;
+  });
+});
+
 document.addEventListener('lehulu:start-lesson', () => {
   const status = document.getElementById('host-status');
   if (status) status.textContent = 'Savanna would open lesson 1 here.';

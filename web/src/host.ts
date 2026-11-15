@@ -32,7 +32,6 @@ const TEXT = {
     jobs: 'Jobs',
     change: 'You can change this in your profile.',
   },
-  // TODO(am-review)
   am: {
     title: 'ይህ ድረ-ገጽ ስልክዎን ከሚጠቀሙበት መንገድ ጋር ተስማምቷል',
     big: 'በሁሉም ገጽ ትልቅ ጽሑፍ።',

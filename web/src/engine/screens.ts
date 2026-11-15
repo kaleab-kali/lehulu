@@ -1,5 +1,4 @@
 // Words for the sign-in, profile, partner and employer screens.
-// TODO(am-review): the Amharic here was written by the team, not yet checked by a native-speaker reviewer.
 
 import type { Lang } from './types';
 
@@ -173,7 +172,7 @@ const am: Words = {
   ownAccount: 'በምትኩ በድርጅት መለያ ይግቡ',
   signedInAs: (n: string) => `እንደ ${n} ገብተዋል።`,
   requestsTitle: 'ተማሪን ለማረጋገጥ የቀረቡ ጥያቄዎች',
-  noRequests: 'የሚጠብቅ ጥያቄ የለም። ተማሪ “ሰነድ የለኝም። አጋር ሊያረጋግጥልኝ ይችላል” ሲመርጥ እዚህ ይታያል።',
+  noRequests: 'የሚጠብቅ ጥያቄ የለም። ተማሪ “ሰነድ የለኝም። አጋር ይመሰክርልኛል።” ሲመርጥ እዚህ ይታያል።',
   nameAudio: 'ስም፣ በተማሪው የተነገረ',
   asked: (d: string) => `${d} ተጠይቋል። ምንም ሰነድ አልተያያዘም።`,
   confirm: 'ይህን ሰው አውቀዋለሁ፤ አረጋግጥ',

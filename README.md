@@ -3,7 +3,7 @@
 Track 1, Accessible onboarding · Digital Bridge Accessibility Hackathon 2026.
 Team: _add names_ · Co-designer: _add name_
 
-![Lehulu front page](docs/screenshots/00-front-page.jpg)
+![Lehulu front page](docs/screenshots/front-page.jpg)
 
 ## What it does
 
@@ -12,18 +12,29 @@ tag. A learner signs up one question at a time, by typing or by voice, in Amhari
 ID document. Instead of asking about disability, it asks how the learner uses their phone, adapts every screen to
 that answer, and (only if the learner agrees) lets the host platform adapt too.
 
-| Support, with Prefer not to say | Amharic on a phone | Success, and the site adapts |
+| Picture choices and read-aloud | Amharic, answered by voice | Account ready, no ID needed |
 |---|---|---|
-| ![Support step with pre-ticked choices and Prefer not to say](docs/screenshots/09-support-prefer-not-to-say.jpg) | ![Amharic name question with a large voice button](docs/screenshots/07-amharic.jpg) | ![Account ready, ID waiting for partner, site adapted](docs/screenshots/11-done-site-adapts.jpg) |
+| ![ID question as large picture tiles](docs/screenshots/signup-pictures.jpg) | ![Amharic name question with a large voice button](docs/screenshots/amharic-voice-phone.jpg) | ![Account ready, ID waiting for the partner, the site adapts](docs/screenshots/signup-done.jpg) |
 
-| Jobs sorted by the support you need | Partner (AAAPD) | Employer |
+| Partner confirms a learner with no ID | Employer reads an application | Inside the Savanna dashboard |
 |---|---|---|
-| ![Jobs and profile](docs/screenshots/12-jobs-sorted-by-support.jpg) | ![Partner requests and register a learner](docs/screenshots/18-partner-confirms.jpg) | ![Employer posts a job and reads an application](docs/screenshots/19-employer.jpg) |
+| ![Partner screen](docs/screenshots/partner.jpg) | ![Employer screen](docs/screenshots/employer.jpg) | ![Lehulu inside Savanna](docs/screenshots/inside-savanna.jpg) |
 
-Inside the real Savanna page, in Savanna's colours. Screenshots of every kind of disability and every
-situation are in [docs/TESTING.md](docs/TESTING.md).
+## How it works for each learner
 
-![Lehulu inside the ALX Savanna dashboard](docs/screenshots/21-inside-savanna.jpg)
+The second question, **How do you use your phone?**, sets how every later screen behaves.
+
+| The learner | Chooses | Lehulu then |
+|---|---|---|
+| is blind | I listen (screen reader) | Announces every question and error, moves the cursor where it is needed, pre-ticks extra time |
+| has low vision | Big and simple | Uses large text and 60-pixel buttons; works at 400% zoom with no sideways scrolling |
+| is Deaf | Sign language | Keeps everything in writing, needs no sound, shows sign videos where recorded, offers interpreter and captions as support |
+| cannot type easily | I speak my answers | Puts **Answer by voice** first; the recording is the answer; no time limits, no dragging |
+| reads little | Pictures and audio, few words | Shows choices as picture tiles and reads each question aloud |
+| has little data | Save my data | Loads video only when tapped; keeps every answer on the phone if the signal drops |
+
+A learner with no ID document chooses **No document. A partner can vouch for me**, finishes sign-up straight away,
+and a partner such as AAAPD confirms them later.
 
 ## The main task we tested
 
@@ -38,48 +49,37 @@ cd lehulu
 docker compose up --build
 ```
 
-Open **http://localhost:8080**. The front page links to every part; nothing else needs setting up. The first build
-takes 5–10 minutes. `docker compose down -v` deletes all data; `PORT=8090 docker compose up` if 8080 is taken.
+Open **http://localhost:8080**. The first build takes 5–10 minutes. `docker compose down -v` deletes all data;
+`PORT=8090 docker compose up` if 8080 is taken.
 
-**This runs as a test system.** Two things in Lehulu normally need the outside world: a learner signing in on a
-new phone gets a code by SMS, and partners and employers log in with a password their administrator gives them.
-A laptop has neither, so on the test system the code is shown on screen, and the partner and employer screens
-offer one-tap test accounts (**Continue as AAAPD**, **Continue as Lideta Tech**, …). Nothing needs switching.
-To run it for real, set `DEMO_MODE=false` and connect an SMS provider (see [Going live](#going-live)); the test
-accounts and on-screen codes then disappear.
+Docker Compose runs Lehulu as a test system, because a laptop has no SMS service and no partner passwords: the
+sign-in code is shown on screen instead of texted, and the partner and employer screens offer one-tap test
+accounts (**Continue as AAAPD**). Everything else works as it would for real. [Going live](#going-live) lists the
+four settings that turn this off.
 
 | Page | What it is |
 |---|---|
-| http://localhost:8080/ | Front page: what Lehulu is, and a card for each part |
+| http://localhost:8080/ | What Lehulu is, how it works, how to add it |
 | http://localhost:8080/signup/ | Learner sign-up |
-| http://localhost:8080/jobs/ | Jobs sorted by your support needs, and **My profile** (sign in, change, download, delete) |
-| http://localhost:8080/partner/ | Partner screen (one tap: **Continue as AAAPD**) |
-| http://localhost:8080/employer/ | Employer screen (one tap: **Continue as Afro Connect**, or another employer) |
-| http://localhost:8080/blank.html | The module alone on an empty page with no host styles |
-| http://localhost:8080/docs | Interactive API documentation |
+| http://localhost:8080/jobs/ | Jobs, and **My profile** (sign in, change, download, delete) |
+| http://localhost:8080/partner/ | Partner screen |
+| http://localhost:8080/employer/ | Employer screen |
+| http://localhost:8080/blank.html | The sign-up alone on a page with no other styles |
+| http://localhost:8080/docs | API documentation |
 | http://localhost:8080/savanna/ | Inside the real Savanna pages, after `bash scripts/import-savanna-starter.sh` |
 
-**How to test for each kind of disability** (blind, low vision, motor, low literacy, Deaf, little data), with
-what should happen and pictures: [docs/TESTING.md](docs/TESTING.md). The same list is on the front page.
+## Testing with the co-designer
 
-### Walk through it
+On their own phone, with their own settings, and with nobody helping:
 
-1. **Sign up** at `/signup/`. Choose a language, then **How do you use your phone?** (for example *I listen* and
-   *Big and simple*). Give your name by typing or with **Answer by voice**. Try `123` as the phone number to see an
-   error, then `0911 234 567`. For ID choose **No document. A partner can vouch for me** → **AAAPD**. Support is
-   pre-ticked from your first answer; **Prefer not to say** is just as easy. Say yes to **Can the learning site
-   adapt to you?** After **Create my account**, the card and the page both say what changed.
-2. **Partner** at `/partner/`: **Continue as AAAPD**, play the learner's spoken name if they gave it by voice, and
-   press **I know this person, confirm**. Or **Register a learner who is with you**: the learner gets a code and the
-   account exists only once they enter it.
-3. **Jobs** at `/jobs/`: jobs offering the support you need come first; the filter runs on the phone. Open a job and
-   apply by text or voice, and choose whether *this employer only* sees your support needs.
-4. **Employer** at `/employer/`: continue as the employer of that job (Junior web developer is Lideta Tech). Post a
-   job with the support it offers, and read applications.
-5. **Another phone**: open **My profile** in a private window, sign in with your phone number and the code shown on
-   screen. On a shared phone you choose your account. Change any answer, **Download my data**, or **Delete my account**.
-6. **Continue later**: stop half-way and press **Continue later**. The SMS has a link (`/signup/?resume=CODE`) that
-   reopens your answers on any phone. Reloading or losing signal loses nothing.
+1. Open `/signup/` and choose a language.
+2. On **How do you use your phone?**, choose what they use every day.
+3. Finish sign-up, choosing **No document. A partner can vouch for me** for ID.
+4. Open **Find jobs**, apply to one job, and choose whether to share support needs.
+
+A screen-reader user uses TalkBack, VoiceOver or NVDA. A Deaf co-designer tests with the sound off; a co-designer
+with a motor disability uses their keyboard, switch or voice; a co-designer with low vision uses their own zoom.
+Write down, in their words, anything they could not do, and add it to [docs/CONFORMANCE.md](docs/CONFORMANCE.md).
 
 ## Install, Level 1: one script tag
 
@@ -191,8 +191,8 @@ number, recording or support need.
 
 Amharic and English everywhere: questions and errors in `flows/*.json`, screen words in
 `web/src/engine/i18n.ts` and `web/src/engine/screens.ts`. Amharic text is marked `lang="am"` (so screen readers
-switch voice) and gets a line height of 1.7. Strings still waiting for a native-speaker check are marked
-`TODO(am-review)`.
+switch voice) and gets a line height of 1.7. When the learner picks a language, the page around the sign-up
+switches too.
 
 To add a language (for example Afaan Oromo, `om`): add an `om` value next to `en`/`am` in each `flows/*.json`
 label, copy the `en` blocks in `i18n.ts` and `screens.ts` to `om`, and add `om` to the `Lang` type and to the
@@ -316,7 +316,7 @@ run on a desktop and a phone viewport, in demo mode and against the server). Sta
 
 **Not finished:**
 - Recorded Amharic question prompts and Ethiopian Sign Language clips (people must record them).
-- Native-speaker review of the Amharic (`TODO(am-review)`).
+- A final read of the Amharic by a native speaker on the team or the co-designer.
 - The conformance report needs the co-designer's TalkBack and NVDA sessions ([docs/CONFORMANCE.md](docs/CONFORMANCE.md)).
 - A real SMS gateway adapter (the simulator is built; production needs a provider's API key).
 - Speech-to-text is not used: voice recordings are kept as the answer, which works in Amharic and offline.

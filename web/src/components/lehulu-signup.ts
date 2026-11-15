@@ -250,6 +250,7 @@ export class LehuluSignup extends LitElement {
   private setLang(lang: Lang) {
     this._lang = lang;
     this.setAttribute('lang', lang);
+    if (this.flow === 'signup') this.emit('lehulu:language', { language: lang });
   }
 
   private set(id: string, value: Answers[string]) {

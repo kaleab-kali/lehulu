@@ -179,15 +179,28 @@ test('@a11y "continue later": the code reopens the answers, and a reload keeps t
   await noSeriousIssues(page, 'restored from a link');
 });
 
-test('@a11y the front page says what Lehulu is and links to every part', async ({ page }) => {
+test('@a11y the front page explains the product, links to each screen and shows how to install it', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByRole('heading', { level: 1, name: 'Sign-up that works for everyone' })).toBeVisible();
-  for (const name of [/^Learner/, /^Partner, such as AAAPD/, /^Employer/, /^Jobs and my profile/]) {
+  for (const name of ['How it works', 'Who it works for', 'Four screens', 'Add it to your platform']) {
+    await expect(page.getByRole('heading', { level: 2, name })).toBeVisible();
+  }
+  for (const name of [/For the learner/, /^Jobs and my profile/, /^Partner Confirm/, /^Employer Post/]) {
     await expect(page.getByRole('main').getByRole('link', { name })).toBeVisible();
   }
+  await expect(page.getByText('<lehulu-signup lang="am"', { exact: false })).toBeVisible();
   await noSeriousIssues(page, 'front page');
-  await page.getByRole('link', { name: 'Try it as a learner' }).click();
+  await page.getByRole('main').getByRole('link', { name: 'Sign up', exact: true }).click();
   await expect(page.locator('lehulu-signup').getByRole('heading', { name: 'Which language?' })).toBeVisible();
+});
+
+test('choosing Amharic switches the page around the sign-up too', async ({ page }) => {
+  await page.goto('signup/');
+  await page.locator('lehulu-signup').getByRole('radio', { name: 'አማርኛ' }).check();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('ሳቫናን ይቀላቀሉ');
+  expect(await page.evaluate(() => document.documentElement.lang)).toBe('am');
+  await page.locator('lehulu-signup').getByRole('radio', { name: 'English' }).check();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Join Savanna');
 });
 
 test('@a11y works on a blank page with no host styles (the judge’s install test)', async ({ page }) => {

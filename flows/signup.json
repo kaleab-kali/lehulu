@@ -53,7 +53,7 @@
       },
       "short": {
         "en": "How I use my phone",
-        "am": "አጠቃቀም"
+        "am": "ስልኬን የምጠቀምበት መንገድ"
       },
       "hint": {
         "en": "Choose any. You can change this later. We never ask about your disability.",
@@ -106,7 +106,7 @@
           },
           "sub": {
             "en": "Large text, big buttons, less typing",
-            "am": "ትልቅ ጽሑፍ፣ ትልቅ ቁልፎች"
+            "am": "ትልቅ ጽሑፍ፣ ትልቅ ቁልፎች፣ ያነሰ መጻፍ"
           }
         },
         {
@@ -118,7 +118,7 @@
           },
           "sub": {
             "en": "A sign video for each question, no sound needed",
-            "am": "ለእያንዳንዱ ጥያቄ የምልክት ቪዲዮ"
+            "am": "ለእያንዳንዱ ጥያቄ የምልክት ቋንቋ ቪዲዮ፤ ድምፅ አያስፈልግም"
           }
         },
         {
@@ -126,7 +126,7 @@
           "icon": "📶",
           "label": {
             "en": "Save my data",
-            "am": "ዳታ ቆጥብ"
+            "am": "ዳታዬን ቆጥብ"
           },
           "sub": {
             "en": "No video or audio unless I tap",
@@ -229,7 +229,7 @@
       },
       "hint": {
         "en": "Not required. Any of these is fine, and you can start learning today.",
-        "am": "ግዴታ አይደለም። ማንኛውም ይቻላል፤ ዛሬ መማር ይጀምራሉ።"
+        "am": "ግዴታ አይደለም። ማንኛውንም መምረጥ ይችላሉ፤ ዛሬውኑ መማር መጀመር ይችላሉ።"
       },
       "options": [
         {
@@ -310,7 +310,7 @@
       },
       "hint": {
         "en": "You can leave this empty and add it later. No photo is needed.",
-        "am": "ባዶ መተው ይችላሉ። ፎቶ አያስፈልግም።"
+        "am": "ባዶ ትተው በኋላ ማስገባት ይችላሉ። ፎቶ አያስፈልግም።"
       }
     },
     {
@@ -333,7 +333,7 @@
       },
       "hint": {
         "en": "We ask them to confirm. You do not wait: learning starts today.",
-        "am": "እንዲያረጋግጡ እንጠይቃለን። አይጠብቁም፤ ዛሬ ይጀምራሉ።"
+        "am": "እንዲያረጋግጡልዎ እንጠይቃቸዋለን። መጠበቅ አያስፈልግዎትም፤ ዛሬውኑ መማር ይጀምራሉ።"
       },
       "options": [
         {
@@ -359,7 +359,7 @@
           "icon": "🏫",
           "label": {
             "en": "My school or training centre",
-            "am": "ትምህርት ቤቴ ወይም የሥልጠና ማዕከል"
+            "am": "ትምህርት ቤቴ ወይም የሥልጠና ማዕከሌ"
           }
         }
       ],

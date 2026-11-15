@@ -46,19 +46,17 @@ const UI = {
     recPending: 'ቅጂው በዚህ ስልክ ተቀምጧል። ሲገናኙ ይላካል።', voiceAnswer: 'በድምፅ ተመልሷል',
     playFailed: 'ይህ ቅጂ እዚህ ሊጫወት አይችልም።',
     play: 'ጥያቄውን ያጫውቱ',
-    // TODO(am-review)
     adapted: 'ይህ ድረ-ገጽ አሁን ስልክዎን ከሚጠቀሙበት መንገድ ጋር ይስማማል። ይህን በመገለጫዎ ውስጥ መቀየር ይችላሉ።',
     signLabel: 'የዚህ ጥያቄ የምልክት ቋንቋ ቪዲዮ', loadSign: 'የምልክት ቋንቋ ቪዲዮ ጫን',
-    // TODO(am-review)
     resumeMissing: 'ለዚህ ማስፈንጠሪያ መልሶችን ማግኘት አልቻልንም። ከአንድ ዓመት በላይ የቆዩ ሊሆኑ ይችላሉ። እባክዎ እንደገና ይጀምሩ፤ ጥቂት ደቂቃዎች ብቻ ይወስዳል።',
-    day: 'ቀን', month: 'ወር', year: 'ዓመት (ኢ.ዓ.)', gregorian: (t: string) => `በፈረንጅ አቆጣጠር ${t} ነው።`,
+    day: 'ቀን', month: 'ወር', year: 'ዓመት (ኢ.ዓ.)', gregorian: (t: string) => `በፈረንጆች አቆጣጠር ${t} ነው።`,
     none: 'ምንም', saved: (code: string) => `ተቀምጧል። በኋላ ለመቀጠል ኮድ ${code} ይጠቀሙ። የጊዜ ገደብ የለም።`,
     restored: 'ቀደም ብለው ያስቀመጧቸውን መልሶች መልሰናል።',
     done: { signup: 'መለያዎ ተፈጥሯል', apply: 'ማመልከቻ ተልኳል', employer: 'ሥራው ተለጥፏል' },
     idStatus: {
       not_given: 'መታወቂያ፦ ገና አልተሰጠም። መማር አይከለከልም።',
       not_checked: 'መታወቂያ፦ ገና አልተረጋገጠም። መማር አይከለከልም።',
-      waiting_partner: 'መታወቂያ፦ አጋርዎ እስኪያረጋግጥ። መማር አይከለከልም።',
+      waiting_partner: 'መታወቂያ፦ አጋርዎ እስኪያረጋግጡ እየተጠበቀ ነው። መማር አይከለከልም።',
       confirmed_by_partner: 'መታወቂያ፦ በአጋርዎ ተረጋግጧል።',
     } as Record<string, string>,
     findJobs: 'ሥራ ፈልግ', startLesson: 'ትምህርት 1 ጀምር', profile: 'የእኔ መገለጫ',
