@@ -141,7 +141,7 @@ Sign-up step ids: `language`, `ways`, `name`, `phone`, `dob`, `idType`, `idNumbe
 
 ## 4. Data model (SQLite)
 
-Source of truth: `server/migrations/0001_init.sql` (embedded in the binary, run on start).
+Source of truth: `server/migrations/` (embedded in the binary, run on start). `0002_voice.sql` adds the `media` table (voice recordings, owned by a learner, deleted with them) and `learners.name_audio`.
 
 ```sql
 -- Lehulu schema. There is deliberately no disability or diagnosis column anywhere.
@@ -241,7 +241,9 @@ CREATE TABLE consent_log (
 | GET | `/v1/jobs` | Jobs + support offered; `Accept: application/ld+json` → schema.org JobPosting | public |
 | POST | `/v1/jobs` | Post a job with support offered | employer token |
 | GET | `/v1/jobs/{id}/applications` | Applications; support needs only where the learner said yes | employer token |
-| POST | `/v1/applications` | Apply (text now; voice upload in F8) | learner |
+| POST | `/v1/applications` | Apply: `why` text and/or `whyAudio` (a recording id) | learner |
+| POST | `/v1/media` | Upload a voice answer (raw `audio/*` body, max 5 MB) → `{ id, url }` | learner |
+| GET | `/v1/media/{id}` | Play a recording | learner, or the employer/partner they chose (F13) |
 | GET | `/v1/partners` | Partner list | public |
 | GET | `/v1/partners/{id}/vouches` | Learners waiting for confirmation | partner token |
 | POST | `/v1/partners/{id}/vouches/{learnerId}` | `{ "decision": "confirm" \| "decline" }` | partner token |

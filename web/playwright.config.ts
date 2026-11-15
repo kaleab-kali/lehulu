@@ -4,14 +4,20 @@ import { defineConfig, devices } from '@playwright/test';
 // Against Docker: BASE_URL=http://localhost:8080 pnpm exec playwright test
 const external = process.env.BASE_URL;
 
+// Voice answers are tested with Chromium's fake microphone (a test tone), already allowed.
+const fakeMic = {
+  permissions: ['microphone'],
+  launchOptions: { args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] },
+};
+
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 90_000, // the main task runs axe on 6+ screens; 30 s is too tight on a typical laptop
   retries: process.env.CI ? 1 : 0,
   use: { baseURL: external ?? 'http://127.0.0.1:4173', trace: 'retain-on-failure' },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'phone', use: { ...devices['Pixel 7'] } },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], ...fakeMic } },
+    { name: 'phone', use: { ...devices['Pixel 7'], ...fakeMic } },
   ],
   webServer: external
     ? undefined

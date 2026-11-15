@@ -156,6 +156,7 @@ export const base = css`
   .tag.ok { background: var(--ok-soft); color: var(--ok); padding: 0.2rem 0.7rem; border-radius: 999px; }
 
   video { width: 100%; max-height: 220px; border-radius: 16px; background: #000; }
+  audio { width: 100%; min-height: 44px; }
 
   /* ---- modes ---- */
   .big { font-size: 1.2rem; }

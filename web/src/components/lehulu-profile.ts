@@ -5,6 +5,7 @@ import { LitElement, html, nothing } from 'lit';
 import { base } from './styles';
 import { needLabel } from '../engine/flow';
 import { session, store, type Learner } from '../data/store';
+// <audio> cannot take a <label>, so aria-label names each player for screen readers.
 
 export class LehuluProfile extends LitElement {
   static styles = base;
@@ -42,7 +43,10 @@ export class LehuluProfile extends LitElement {
       ${!l
         ? html`<p>You are not signed up on this device.</p>`
         : html`<dl>
-              <div><dt>Name</dt><dd>${l.name}</dd></div>
+              <div><dt>Name</dt><dd>${l.name || 'Given by voice'}
+                ${l.nameAudio
+                  ? html`<audio controls preload="none" src=${store.recordingUrl(l.nameAudio)} aria-label="Your name, as you said it"></audio>`
+                  : nothing}</dd></div>
               <div><dt>Phone</dt><dd>${l.phone}</dd></div>
               <div><dt>How I use my phone</dt><dd>${l.accessPreferences.join(', ') || '—'}</dd></div>
               <div><dt>Support</dt><dd>${l.supportNeeds.map((n) => needLabel(n, 'en')).join(', ') || 'None'}</dd></div>

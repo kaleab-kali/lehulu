@@ -1,6 +1,6 @@
 //! All settings come from environment variables (see .env.example). Defaults work for local dev.
 
-// media_dir, sms_adapter and retention_days are read by features F8, F18 and F21.
+// sms_adapter and retention_days are read by features F18 and F21.
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -37,6 +37,10 @@ impl Config {
         c.database_url = "sqlite::memory:".into();
         c.flows_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../flows").into();
         c.seed_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/seed").into();
+        c.media_dir = std::env::temp_dir()
+            .join(format!("lehulu-test-media-{}", uuid::Uuid::new_v4()))
+            .to_string_lossy()
+            .into_owned();
         c
     }
 }

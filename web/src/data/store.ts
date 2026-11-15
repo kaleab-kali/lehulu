@@ -9,7 +9,10 @@ import type { EthDate } from '../engine/types';
 
 export interface Learner {
   id: string;
+  /** May be empty when the name was given by voice (see nameAudio). */
   name: string;
+  /** Recording of the learner saying their name (id for recordingUrl). */
+  nameAudio?: string | null;
   phone: string;
   language: 'am' | 'en';
   dobEthiopian?: EthDate | null;
@@ -26,10 +29,19 @@ export type NewLearner = Omit<Learner, 'id' | 'idStatus'>;
 export interface Job { id: string; title: string; org: string; city?: string | null; remote: boolean; supportOffered: string[] }
 export type NewJob = Omit<Job, 'id'>;
 export interface Partner { id: string; name: string }
-export interface VouchRequest { learnerId: string; name: string; phone: string; requestedAt: string }
+export interface VouchRequest { learnerId: string; name: string; nameAudio?: string | null; phone: string; requestedAt: string }
 export interface Draft { flowId: string; stepIndex: number; answers: Record<string, unknown>; sendLinkTo?: string }
-export interface NewApplication { jobId: string; learnerId: string; why: string; shareSupport: boolean }
-export interface EmployerApplication { id: string; learnerName: string; why?: string | null; supportRequested?: string[] | null }
+/** `why` may be empty when `whyAudio` (a recording id) is given. */
+export interface NewApplication { jobId: string; learnerId: string; why: string; whyAudio?: string | null; shareSupport: boolean }
+/** Recording fields are references: pass them to store.recordingUrl() to play. */
+export interface EmployerApplication {
+  id: string;
+  learnerName: string;
+  learnerNameAudio?: string | null;
+  why?: string | null;
+  whyAudio?: string | null;
+  supportRequested?: string[] | null;
+}
 
 /** An error the screen can show next to the right field. */
 export class FieldError extends Error {
@@ -53,6 +65,10 @@ export interface DataStore {
   listPartners(): Promise<Partner[]>;
   listVouches(partner: string): Promise<VouchRequest[]>;
   decideVouch(partner: string, learnerId: string, decision: 'confirm' | 'decline'): Promise<Learner>;
+  /** Save a voice answer; returns the id an answer refers to (nameAudio, whyAudio). */
+  uploadRecording(audio: Blob): Promise<string>;
+  /** A URL an <audio> element can play, from a recording id or reference. */
+  recordingUrl(ref: string): string;
 }
 
 class ApiStore implements DataStore {
@@ -95,6 +111,26 @@ class ApiStore implements DataStore {
   decideVouch(p: string, id: string, decision: 'confirm' | 'decline') {
     return this.call<Learner>('POST', `/partners/${encodeURIComponent(p)}/vouches/${id}`, { decision });
   }
+  async uploadRecording(audio: Blob) {
+    let res: Response;
+    try {
+      res = await fetch(`${this.base}/v1/media`, {
+        method: 'POST',
+        headers: { 'Content-Type': audio.type || 'audio/webm' },
+        body: audio,
+      });
+    } catch {
+      throw new FieldError('You seem to be offline. Your recording is kept on this phone and will be sent when you are connected.');
+    }
+    if (!res.ok) {
+      const e = await res.json().catch(() => null);
+      throw new FieldError(e?.error?.message ?? 'We could not save the recording. Please try again.', e?.error?.field, e?.error?.code);
+    }
+    return ((await res.json()) as { id: string }).id;
+  }
+  recordingUrl(ref: string) {
+    return ref.startsWith('/v1/') ? `${this.base}${ref}` : `${this.base}/v1/media/${encodeURIComponent(ref)}`;
+  }
 }
 
 // ---------- Demo mode: everything stays in this browser ----------
@@ -105,6 +141,8 @@ interface LocalDb {
   drafts: Record<string, Draft>;
   vouches: { learnerId: string; partner: string; status: 'requested' | 'confirmed' | 'declined'; requestedAt: string }[];
   applications: (NewApplication & { id: string })[];
+  /** Voice recordings as data: URLs, by id (demo mode keeps them in this browser). */
+  media: Record<string, string>;
 }
 
 const KEY = 'lehulu:demo-db';
@@ -117,7 +155,8 @@ class LocalStore implements DataStore {
     if (this.mem) return this.mem;
     let db: LocalDb | null = null;
     try { db = JSON.parse(localStorage.getItem(KEY) ?? 'null'); } catch { db = null; }
-    this.mem = db ?? { learners: [], jobs: seedJobs as Job[], drafts: {}, vouches: [], applications: [] };
+    this.mem = db ?? { learners: [], jobs: seedJobs as Job[], drafts: {}, vouches: [], applications: [], media: {} };
+    this.mem.media ??= {}; // demo data saved before voice answers existed
     return this.mem;
   }
   private save() {
@@ -156,6 +195,9 @@ class LocalStore implements DataStore {
   }
   async deleteLearner(id: string) {
     const db = this.db();
+    // Right to erasure includes voice recordings.
+    const mine = [db.learners.find((x) => x.id === id)?.nameAudio, ...db.applications.filter((a) => a.learnerId === id).map((a) => a.whyAudio)];
+    for (const m of mine) if (m) delete db.media[m];
     db.learners = db.learners.filter((x) => x.id !== id);
     db.vouches = db.vouches.filter((v) => v.learnerId !== id);
     db.applications = db.applications.filter((a) => a.learnerId !== id);
@@ -178,7 +220,14 @@ class LocalStore implements DataStore {
     const db = this.db();
     return db.applications.filter((a) => a.jobId === jobId).map((a) => {
       const l = db.learners.find((x) => x.id === a.learnerId);
-      return { id: a.id, learnerName: l?.name ?? '—', why: a.why, supportRequested: a.shareSupport ? l?.supportNeeds ?? [] : null };
+      return {
+        id: a.id,
+        learnerName: l?.name ?? '—',
+        learnerNameAudio: l?.nameAudio ?? null,
+        why: a.why || null,
+        whyAudio: a.whyAudio ?? null,
+        supportRequested: a.shareSupport ? l?.supportNeeds ?? [] : null,
+      };
     });
   }
   async listPartners() { return seedPartners as Partner[]; }
@@ -188,7 +237,7 @@ class LocalStore implements DataStore {
       .filter((v) => v.partner === p && v.status === 'requested')
       .map((v) => {
         const l = db.learners.find((x) => x.id === v.learnerId)!;
-        return { learnerId: l.id, name: l.name, phone: l.phone, requestedAt: v.requestedAt };
+        return { learnerId: l.id, name: l.name, nameAudio: l.nameAudio ?? null, phone: l.phone, requestedAt: v.requestedAt };
       });
   }
   async decideVouch(p: string, id: string, decision: 'confirm' | 'decline') {
@@ -196,6 +245,22 @@ class LocalStore implements DataStore {
     if (!v) throw new FieldError('We could not find that request.');
     v.status = decision === 'confirm' ? 'confirmed' : 'declined';
     return this.updateLearnerStatus(id, decision === 'confirm' ? 'confirmed_by_partner' : 'not_given');
+  }
+  async uploadRecording(audio: Blob) {
+    if (audio.size > 2 * 1024 * 1024) throw new FieldError('The recording is too long for demo mode. Please keep it short, or type your answer.');
+    const url = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = () => reject(new FieldError('We could not save the recording. Please try again.'));
+      r.readAsDataURL(audio);
+    });
+    const id = this.id();
+    this.db().media[id] = url;
+    this.save();
+    return id;
+  }
+  recordingUrl(ref: string) {
+    return this.db().media[ref] ?? '';
   }
   private async updateLearnerStatus(id: string, s: Learner['idStatus']) {
     const l = await this.getLearner(id);

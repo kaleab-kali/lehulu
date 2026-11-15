@@ -16,14 +16,14 @@ Track 1 requirement each feature serves is in brackets. Owners: A server · B we
 | F5 | Server skeleton, SQLite, migrations, Docker | A | ✅ | axum + sqlx, `healthcheck`, Dockerfile, compose | Run `docker compose up --build` once on a laptop |
 | F6 | Learners + drafts API, OpenAPI | A | ✅ | `/v1/learners`, `/v1/drafts`, Swagger at `/docs` | — |
 | F7 | Access modes [low-literacy path, works for everyone] | B | 🟡 | Flags: voice-first, picture tiles, big, play prompt, sign clips, data saver | Big number keypad for phone in "big"/"speak"; voice-only mode (stretch) |
-| F8 | Voice answers [voice input on every field, review and edit] | B+A | 🟡 | Record/stop on every text field; recording counts as the answer | Upload recordings (multipart `POST /v1/applications`, learner name audio); play back for review |
+| F8 | Voice answers [voice input on every field, review and edit] | B+A | ✅ | Record/stop on every text field; recording counts as the answer; uploaded as soon as it stops (`POST /v1/media`), kept on the phone if offline and sent before the answers; play back, record again, delete; Play button on the review screen; employer hears the answer and the spoken name, partner hears the spoken name; deleted with the account | 👤 TalkBack/NVDA check of the voice controls; speech-to-text stays a stretch goal (S1) |
 | F9 | Pictures mode + recorded prompts [low-literacy path] | C | 🟡 | UI ready; plays `audio/<lang>/<step>.opus` | 👤 Record prompts (see docs/RECORDING.md) |
 | F10 | ID routes + partner vouch [other ID routes, partner referral] | A+C | ✅ | Kebele/Fayda, refugee, other, partner, skip; partner screen confirms/declines; consent log | — |
 | F11 | Support needs pre-ticked [private support request, no proof] | B | ✅ | From first answer via `needs.json` `fromWays` | — |
 | F12 | Profile: view, edit, delete [profile] | B+A | 🟡 | View + delete; `PATCH /v1/learners/{id}` exists | "Change" per answer in `<lehulu-profile>`; real session instead of localStorage id |
 | F13 | Jobs API, JSON-LD, employer form, auth [employer accommodations form, Level 3] | A | 🟡 | Jobs + support offered; `Accept: application/ld+json`; employer flow posts jobs | OAuth 2.0 client credentials for partners/employers (`/oauth/token`, JWT); restrict CORS |
 | F14 | Job list with private filter [private "support I need" filter] | B | ✅ | Filter on device, ranked by needs met, count announced, titles are headings | — |
-| F15 | Apply flow + share choice + employer view [application flow with voice] | B+A | ✅ | Reuses engine; share yes/no; employer sees needs only if shared | Voice upload (F8) |
+| F15 | Apply flow + share choice + employer view [application flow with voice] | B+A | ✅ | Reuses engine; share yes/no; employer sees needs only if shared; answer by voice and the employer plays it | — |
 | F16 | Sign language mode | C | 🟡 | Plays `sign/<step>.webm`; text always shown; lazy in data-saver | 👤 Record clips with the interpreter |
 | F17 | Amharic interface | C | 🟡 | All flow screens bilingual; `lang` set | Partner/employer/profile screens are English only; 👤 Amharic review |
 | F18 | SMS simulator, partner registers learner with consent [bonus features] | A | 🟡 | Simulator at `/dev/sms`; continue-later SMS | `POST /v1/partners/{id}/registrations` + learner code confirmation screen |

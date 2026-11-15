@@ -21,7 +21,10 @@ pub struct Partner {
 #[serde(rename_all = "camelCase")]
 pub struct VouchRequest {
     pub learner_id: String,
+    /// May be empty when the learner gave their name by voice (see `name_audio`).
     pub name: String,
+    /// Play at this URL: the learner saying their name.
+    pub name_audio: Option<String>,
     pub phone: String,
     pub requested_at: String,
 }
@@ -51,8 +54,8 @@ pub async fn list_vouches(
     Path(partner): Path<String>,
 ) -> ApiResult<Json<Vec<VouchRequest>>> {
     // TODO(F13): require this partner's access token.
-    let rows: Vec<(String, String, String, String)> = sqlx::query_as(
-        "SELECT l.id, l.name, l.phone, v.requested_at FROM vouches v JOIN learners l ON l.id = v.learner_id
+    let rows: Vec<(String, String, Option<String>, String, String)> = sqlx::query_as(
+        "SELECT l.id, l.name, l.name_audio, l.phone, v.requested_at FROM vouches v JOIN learners l ON l.id = v.learner_id
          WHERE v.partner_id = ? AND v.status = 'requested' ORDER BY v.requested_at",
     )
     .bind(&partner)
@@ -60,12 +63,15 @@ pub async fn list_vouches(
     .await?;
     Ok(Json(
         rows.into_iter()
-            .map(|(learner_id, name, phone, requested_at)| VouchRequest {
-                learner_id,
-                name,
-                phone,
-                requested_at,
-            })
+            .map(
+                |(learner_id, name, name_audio, phone, requested_at)| VouchRequest {
+                    learner_id,
+                    name,
+                    name_audio: name_audio.map(|m| format!("/v1/media/{m}")),
+                    phone,
+                    requested_at,
+                },
+            )
             .collect(),
     ))
 }

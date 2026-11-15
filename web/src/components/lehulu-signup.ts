@@ -24,8 +24,9 @@ const FLOWS: Record<string, Flow> = {
 };
 
 // Server field names → step ids, so an API error lands on the right question.
-const FIELD_TO_STEP: Record<string, string> = { dobEthiopian: 'dob', supportOffered: 'supportOffered' };
-const VOICE_PLACEHOLDER = 'Voice answer (recording saved)';
+const FIELD_TO_STEP: Record<string, string> = { dobEthiopian: 'dob', supportOffered: 'supportOffered', nameAudio: 'name', whyAudio: 'why' };
+/** Answer value for a recording kept on this phone until it can be uploaded (offline). */
+const PENDING = 'pending';
 
 let counter = 0;
 
@@ -49,6 +50,7 @@ export class LehuluSignup extends LitElement {
     _prefs: { state: true },
     _missing: { state: true },
     _signLoaded: { state: true },
+    _playing: { state: true },
   };
 
   declare flow: string;
@@ -68,13 +70,17 @@ export class LehuluSignup extends LitElement {
   declare _prefs: string[];
   declare _missing: Set<string>;
   declare _signLoaded: boolean;
+  declare _playing: string | null;
 
   private uid = `lehulu-${++counter}`;
-  private focusTarget: 'heading' | 'field' | 'done' | null = null;
+  private focusTarget: 'heading' | 'field' | 'done' | 'voice' | null = null;
   private draftCode: string | null = null;
   private recorder = new Recorder();
-  /** Voice recordings by step id. TODO(F8): upload with the answers (multipart). */
+  /** Recordings not uploaded yet (offline), by step id. Sent before the answers are. */
   readonly recordings = new Map<string, Blob>();
+  /** Local playback URLs for recordings made on this page, by step id. */
+  private previews = new Map<string, string>();
+  private player: HTMLAudioElement | null = null;
 
   constructor() {
     super();
@@ -95,6 +101,13 @@ export class LehuluSignup extends LitElement {
     this._prefs = [];
     this._missing = new Set();
     this._signLoaded = false;
+    this._playing = null;
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.player?.pause();
+    for (const url of this.previews.values()) URL.revokeObjectURL(url);
   }
 
   connectedCallback() {
@@ -147,7 +160,10 @@ export class LehuluSignup extends LitElement {
     const d = await store.getDraft(code);
     if (d && d.flowId === this.flow) {
       this.draftCode = code;
-      this._answers = d.answers as Answers;
+      // A recording that never left the old page (offline, or an older draft) is gone: ask again.
+      this._answers = Object.fromEntries(
+        Object.entries(d.answers as Answers).filter(([k, v]) => !(k.endsWith('__audio') && (v === PENDING || v === 'recorded'))),
+      ) as Answers;
       this._i = Math.min(d.stepIndex, this.steps.length - 1);
       if (this._answers.language === 'am' || this._answers.language === 'en') this.setLang(this._answers.language);
       this._status = this.t.restored;
@@ -158,7 +174,13 @@ export class LehuluSignup extends LitElement {
     if (!this.focusTarget) return;
     const root = this.renderRoot as ShadowRoot;
     const sel =
-      this.focusTarget === 'heading' ? `#${this.uid}-h` : this.focusTarget === 'done' ? `#${this.uid}-done` : '[aria-invalid="true"], [data-first]';
+      this.focusTarget === 'heading'
+        ? `#${this.uid}-h`
+        : this.focusTarget === 'done'
+          ? `#${this.uid}-done`
+          : this.focusTarget === 'voice'
+            ? '[data-voice]'
+            : '[aria-invalid="true"], [data-first]';
     const el = root.querySelector<HTMLElement>(sel);
     this.focusTarget = null;
     el?.focus();
@@ -280,17 +302,42 @@ export class LehuluSignup extends LitElement {
     this.set(s.id, cur);
   }
 
+  private audioRef(stepId: string): string | null {
+    const v = this._answers[`${stepId}__audio`];
+    return typeof v === 'string' && v !== PENDING && v !== 'recorded' ? v : null;
+  }
+
+  private dropAnswer(key: string) {
+    const rest = { ...this._answers };
+    delete rest[key];
+    this._answers = rest;
+  }
+
   private async toggleVoice(s: Step) {
     if (!Recorder.supported()) {
       this._status = this.t.micBlocked;
       return;
     }
+    this.stopPlaying();
     if (this.recorder.recording) {
       const { blob, seconds } = await this.recorder.stop();
-      this.recordings.set(s.id, blob);
       this._recording = false;
-      this.set(`${s.id}__audio`, 'recorded');
-      this._status = this.t.recorded(seconds);
+      const old = this.previews.get(s.id);
+      if (old) URL.revokeObjectURL(old);
+      this.previews.set(s.id, URL.createObjectURL(blob));
+      this._status = this.t.savingRec;
+      try {
+        const id = await store.uploadRecording(blob);
+        this.recordings.delete(s.id);
+        this.set(`${s.id}__audio`, id);
+        this._status = this.t.recorded(seconds);
+      } catch {
+        // Offline: keep it on this phone; finish() sends it before the answers.
+        this.recordings.set(s.id, blob);
+        this.set(`${s.id}__audio`, PENDING);
+        this._status = this.t.recPending;
+      }
+      void this.autosave();
       return;
     }
     try {
@@ -299,6 +346,60 @@ export class LehuluSignup extends LitElement {
       this._status = this.t.recording;
     } catch {
       this._status = this.t.micBlocked;
+    }
+  }
+
+  private stopPlaying() {
+    this.player?.pause();
+    this.player = null;
+    this._playing = null;
+  }
+
+  private playRecording(stepId: string) {
+    if (this._playing === stepId) {
+      this.stopPlaying();
+      this._status = '';
+      return;
+    }
+    this.stopPlaying();
+    const ref = this.audioRef(stepId);
+    const url = this.previews.get(stepId) ?? (ref ? store.recordingUrl(ref) : '');
+    if (!url) {
+      this._status = this.t.playFailed;
+      return;
+    }
+    const audio = new Audio(url);
+    this.player = audio;
+    this._playing = stepId;
+    this._status = this.t.playing;
+    audio.onended = () => {
+      if (this.player === audio) this.stopPlaying();
+      this._status = '';
+    };
+    audio.play().catch(() => {
+      if (this.player === audio) this.stopPlaying();
+      this._status = this.t.playFailed;
+    });
+  }
+
+  private deleteRecording(s: Step) {
+    this.stopPlaying();
+    this.recordings.delete(s.id);
+    const url = this.previews.get(s.id);
+    if (url) URL.revokeObjectURL(url);
+    this.previews.delete(s.id);
+    this.dropAnswer(`${s.id}__audio`);
+    this._status = this.t.deleted;
+    this.focusTarget = 'voice'; // the Delete button is gone: put focus back on the voice button
+    void this.autosave();
+  }
+
+  /** Send recordings that were kept on this phone while offline. */
+  private async flushRecordings() {
+    for (const [stepId, blob] of [...this.recordings]) {
+      const id = await store.uploadRecording(blob);
+      this.recordings.delete(stepId);
+      this.set(`${stepId}__audio`, id);
     }
   }
 
@@ -321,7 +422,7 @@ export class LehuluSignup extends LitElement {
       return list.map((x) => text(optionsFor(s).find((o) => o.value === x)?.label, this._lang)).join(', ');
     }
     if (s.type === 'choice') return text(optionsFor(s).find((o) => o.value === v)?.label, this._lang) || '—';
-    if (!v && this._answers[`${s.id}__audio`]) return '🎤 ' + VOICE_PLACEHOLDER;
+    if (!v && this._answers[`${s.id}__audio`]) return this.t.voiceAnswer;
     return (v as string) || '—';
   }
 
@@ -332,9 +433,11 @@ export class LehuluSignup extends LitElement {
     this._busy = true;
     this._status = this.t.sending;
     try {
+      await this.flushRecordings();
       if (this.flow === 'signup') {
         const learner = await store.createLearner({
-          name: str('name') || VOICE_PLACEHOLDER,
+          name: str('name'),
+          nameAudio: this.audioRef('name'),
           phone: normalisePhone(str('phone')) ?? str('phone'),
           language: (a.language as Lang) ?? this._lang,
           dobEthiopian: (a.dob as EthDate) ?? null,
@@ -353,7 +456,7 @@ export class LehuluSignup extends LitElement {
         const learnerId = session.get();
         if (!learnerId || !this.jobId) throw new FieldError(this.t.signUpFirst);
         const shared = a.shareSupport === 'yes';
-        await store.apply({ jobId: this.jobId, learnerId, why: str('why') || VOICE_PLACEHOLDER, shareSupport: shared });
+        await store.apply({ jobId: this.jobId, learnerId, why: str('why'), whyAudio: this.audioRef('why'), shareSupport: shared });
         this._done = { shared };
         this.emit('lehulu:application-sent', { jobId: this.jobId, supportShared: shared });
       } else {
@@ -461,10 +564,7 @@ export class LehuluSignup extends LitElement {
       case 'tel': {
         const inputId = `${this.uid}-in`;
         const label = html`<label for=${inputId}>${title}${s.optional ? html` <span class="meta">(${this.t.optional})</span>` : nothing}</label>`;
-        const voice =
-          s.type === 'text'
-            ? html`<div class="row"><button type="button" class=${m.voiceFirst ? 'primary grow' : 'small'} aria-pressed=${this._recording ? 'true' : 'false'} @click=${() => this.toggleVoice(s)}><span aria-hidden="true">🎤</span> ${this._recording ? this.t.stop : this.t.voice}</button></div>`
-            : nothing;
+        const voice = s.type === 'text' ? this.voiceRow(s) : nothing;
         return html`
           ${this.heading(s, label)} ${this.media(s)} ${this.hint(s)} ${m.voiceFirst ? voice : nothing}
           <input
@@ -548,7 +648,14 @@ export class LehuluSignup extends LitElement {
                 <dt>${name}</dt>
                 <dd>
                   <span>${this.answerText(x)}</span>
-                  <button type="button" class="small" aria-label="${this.t.change}: ${name}" @click=${() => this.edit(x.id)}>${this.t.change}</button>
+                  <span class="row">
+                    ${this._answers[`${x.id}__audio`]
+                      ? html`<button type="button" class="small" aria-label="${this._playing === x.id ? this.t.stopPlaying : this.t.playRec}: ${name}" @click=${() => this.playRecording(x.id)}>
+                          <span aria-hidden="true">${this._playing === x.id ? '⏹' : '▶'}</span> ${this._playing === x.id ? this.t.stopPlaying : this.t.playRec}
+                        </button>`
+                      : nothing}
+                    <button type="button" class="small" aria-label="${this.t.change}: ${name}" @click=${() => this.edit(x.id)}>${this.t.change}</button>
+                  </span>
                 </dd>
               </div>`;
             })}
@@ -558,6 +665,27 @@ export class LehuluSignup extends LitElement {
       default:
         return html`${this.heading(s)} ${this.media(s)} ${this.hint(s)}`;
     }
+  }
+
+  /** Voice answer controls. The first button stays the same element (Answer → Stop → Record again)
+   * so keyboard focus is never lost while recording. */
+  private voiceRow(s: Step) {
+    const t = this.t;
+    const has = Boolean(this._answers[`${s.id}__audio`]);
+    const rec = this._recording;
+    const first = rec ? t.stop : has ? t.reRecord : t.voice;
+    const big = this.modes.voiceFirst && !has && !rec;
+    return html`<div class="row">
+      <button type="button" data-voice class=${big ? 'primary grow' : 'small'} @click=${() => this.toggleVoice(s)}>
+        <span aria-hidden="true">${rec ? '⏹' : '🎤'}</span> ${first}
+      </button>
+      ${has && !rec
+        ? html`<button type="button" class="small" @click=${() => this.playRecording(s.id)}>
+              <span aria-hidden="true">${this._playing === s.id ? '⏹' : '▶'}</span> ${this._playing === s.id ? t.stopPlaying : t.playMine}
+            </button>
+            <button type="button" class="small" @click=${() => this.deleteRecording(s)}><span aria-hidden="true">🗑</span> ${t.deleteRec}</button>`
+        : nothing}
+    </div>`;
   }
 
   private renderNav(i: number, n: number) {

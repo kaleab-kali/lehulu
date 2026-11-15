@@ -4,7 +4,7 @@
 use crate::{
     domain::{ethiopian_calendar, needs::WAYS, validate},
     error::{ApiError, ApiResult},
-    routes::AppState,
+    routes::{media, AppState},
 };
 use axum::{
     extract::{Path, State},
@@ -28,7 +28,10 @@ pub struct EthDate {
 #[serde(rename_all = "camelCase")]
 pub struct Learner {
     pub id: String,
+    /// May be empty when the learner gave their name by voice (see `name_audio`).
     pub name: String,
+    /// Id of a recording of the learner saying their name. Play it at `/v1/media/{id}`.
+    pub name_audio: Option<String>,
     pub phone: String,
     pub language: String,
     pub dob_ethiopian: Option<EthDate>,
@@ -49,7 +52,12 @@ pub struct Learner {
 #[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct NewLearner {
+    /// Required unless `nameAudio` is given.
+    #[serde(default)]
     pub name: String,
+    /// Id from `POST /v1/media`: the learner saying their name.
+    #[serde(default)]
+    pub name_audio: Option<String>,
     pub phone: String,
     pub language: String,
     pub dob_ethiopian: Option<EthDate>,
@@ -66,6 +74,7 @@ pub struct NewLearner {
 #[serde(rename_all = "camelCase")]
 pub struct LearnerPatch {
     pub name: Option<String>,
+    pub name_audio: Option<String>,
     pub phone: Option<String>,
     pub language: Option<String>,
     pub dob_ethiopian: Option<EthDate>,
@@ -91,8 +100,31 @@ fn id_status_for(id_type: &str) -> &'static str {
     }
 }
 
-async fn check(st: &AppState, l: &NewLearner) -> ApiResult<String> {
-    validate::required(&l.name, "name", "Enter your name.")?;
+/// `owner` is the learner being updated (None when signing up), so they may keep their own recording.
+async fn check(st: &AppState, l: &NewLearner, owner: Option<&str>) -> ApiResult<String> {
+    match l.name_audio.as_deref() {
+        None => validate::required(
+            &l.name,
+            "name",
+            "Enter your name, or say it with “Answer by voice”.",
+        )?,
+        Some(audio) => {
+            let ok: Option<(String,)> = sqlx::query_as(
+                "SELECT id FROM media WHERE id = ? AND (learner_id IS NULL OR learner_id = ?)",
+            )
+            .bind(audio)
+            .bind(owner)
+            .fetch_optional(&st.pool)
+            .await?;
+            if ok.is_none() {
+                return Err(ApiError::invalid(
+                    "audio_unknown",
+                    "nameAudio",
+                    "We could not find the recording of your name. Please record it again, or type your name.",
+                ));
+            }
+        }
+    }
     let phone = validate::et_phone(&l.phone)?;
     validate::one_of(
         &l.language,
@@ -175,6 +207,7 @@ pub async fn fetch(pool: &SqlitePool, id: &str) -> ApiResult<Learner> {
     Ok(Learner {
         id: r.get("id"),
         name: r.get("name"),
+        name_audio: r.get("name_audio"),
         phone: r.get("phone"),
         language: r.get("language"),
         dob_gregorian: dob.as_ref().map(|d| {
@@ -214,16 +247,17 @@ pub async fn create_learner(
     State(st): State<AppState>,
     Json(l): Json<NewLearner>,
 ) -> ApiResult<(StatusCode, Json<Learner>)> {
-    let phone = check(&st, &l).await?;
+    let phone = check(&st, &l, None).await?;
     let id = uuid::Uuid::new_v4().to_string();
     let now = chrono::Utc::now().to_rfc3339();
     let mut tx = st.pool.begin().await?;
     sqlx::query(
-        "INSERT INTO learners (id, name, phone, language, dob_eth_y, dob_eth_m, dob_eth_d, access_preferences,
-         id_type, id_number, partner_id, id_status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO learners (id, name, name_audio, phone, language, dob_eth_y, dob_eth_m, dob_eth_d, access_preferences,
+         id_type, id_number, partner_id, id_status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
     )
     .bind(&id)
     .bind(l.name.trim())
+    .bind(l.name_audio.as_deref())
     .bind(&phone)
     .bind(&l.language)
     .bind(l.dob_ethiopian.as_ref().map(|d| d.y))
@@ -254,6 +288,9 @@ pub async fn create_learner(
             .await?;
     }
     tx.commit().await?;
+    if let Some(audio) = l.name_audio.as_deref() {
+        media::claim(&st.pool, audio, &id, "nameAudio").await?;
+    }
     log(&st.pool, Some(&id), "learner", "signed_up").await?;
     Ok((StatusCode::CREATED, Json(fetch(&st.pool, &id).await?)))
 }
@@ -278,6 +315,7 @@ pub async fn update_learner(
     let cur = fetch(&st.pool, &id).await?;
     let merged = NewLearner {
         name: p.name.unwrap_or(cur.name),
+        name_audio: p.name_audio.or(cur.name_audio),
         phone: p.phone.unwrap_or(cur.phone),
         language: p.language.unwrap_or(cur.language),
         dob_ethiopian: p.dob_ethiopian.or(cur.dob_ethiopian),
@@ -287,7 +325,7 @@ pub async fn update_learner(
         id_number: p.id_number.or(cur.id_number),
         partner: p.partner.or(cur.partner.clone()),
     };
-    let phone = check(&st, &merged).await?;
+    let phone = check(&st, &merged, Some(&id)).await?;
     // Keep a partner confirmation if the learner did not change partner.
     let same_partner =
         merged.id_type == "partner" && cur.id_type == "partner" && merged.partner == cur.partner;
@@ -298,10 +336,11 @@ pub async fn update_learner(
     };
     let mut tx = st.pool.begin().await?;
     sqlx::query(
-        "UPDATE learners SET name=?, phone=?, language=?, dob_eth_y=?, dob_eth_m=?, dob_eth_d=?, access_preferences=?,
+        "UPDATE learners SET name=?, name_audio=?, phone=?, language=?, dob_eth_y=?, dob_eth_m=?, dob_eth_d=?, access_preferences=?,
          id_type=?, id_number=?, partner_id=?, id_status=?, updated_at=? WHERE id=?",
     )
     .bind(merged.name.trim())
+    .bind(merged.name_audio.as_deref())
     .bind(&phone)
     .bind(&merged.language)
     .bind(merged.dob_ethiopian.as_ref().map(|d| d.y))
@@ -336,6 +375,9 @@ pub async fn update_learner(
             .await?;
     }
     tx.commit().await?;
+    if let Some(audio) = merged.name_audio.as_deref() {
+        media::claim(&st.pool, audio, &id, "nameAudio").await?;
+    }
     log(&st.pool, Some(&id), "learner", "profile_updated").await?;
     Ok(Json(fetch(&st.pool, &id).await?))
 }
@@ -346,6 +388,8 @@ pub async fn delete_learner(
     State(st): State<AppState>,
     Path(id): Path<String>,
 ) -> ApiResult<StatusCode> {
+    // Right to erasure includes voice recordings: remove the files, rows cascade with the learner.
+    media::delete_files_of(&st.pool, &st.cfg.media_dir, &id).await?;
     let res = sqlx::query("DELETE FROM learners WHERE id = ?")
         .bind(&id)
         .execute(&st.pool)
