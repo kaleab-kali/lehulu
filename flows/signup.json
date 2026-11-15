@@ -53,7 +53,7 @@
       },
       "short": {
         "en": "How I use my phone",
-        "am": "አጠቃቀም"
+        "am": "ስልኬን የምጠቀምበት መንገድ"
       },
       "hint": {
         "en": "Choose any. You can change this later. We never ask about your disability.",
@@ -106,7 +106,7 @@
           },
           "sub": {
             "en": "Large text, big buttons, less typing",
-            "am": "ትልቅ ጽሑፍ፣ ትልቅ ቁልፎች"
+            "am": "ትልቅ ጽሑፍ፣ ትልቅ ቁልፎች፣ ያነሰ መጻፍ"
           }
         },
         {
@@ -117,8 +117,8 @@
             "am": "የምልክት ቋንቋ"
           },
           "sub": {
-            "en": "A sign video for each question, no sound needed",
-            "am": "ለእያንዳንዱ ጥያቄ የምልክት ቪዲዮ"
+            "en": "Pictures and sign videos, no sound needed",
+            "am": "ሥዕሎችና የምልክት ቋንቋ ቪዲዮዎች፤ ድምፅ አያስፈልግም"
           }
         },
         {
@@ -126,7 +126,7 @@
           "icon": "📶",
           "label": {
             "en": "Save my data",
-            "am": "ዳታ ቆጥብ"
+            "am": "ዳታዬን ቆጥብ"
           },
           "sub": {
             "en": "No video or audio unless I tap",
@@ -229,7 +229,7 @@
       },
       "hint": {
         "en": "Not required. Any of these is fine, and you can start learning today.",
-        "am": "ግዴታ አይደለም። ማንኛውም ይቻላል፤ ዛሬ መማር ይጀምራሉ።"
+        "am": "ግዴታ አይደለም። ማንኛውንም መምረጥ ይችላሉ፤ ዛሬውኑ መማር መጀመር ይችላሉ።"
       },
       "options": [
         {
@@ -310,7 +310,7 @@
       },
       "hint": {
         "en": "You can leave this empty and add it later. No photo is needed.",
-        "am": "ባዶ መተው ይችላሉ። ፎቶ አያስፈልግም።"
+        "am": "ባዶ ትተው በኋላ ማስገባት ይችላሉ። ፎቶ አያስፈልግም።"
       }
     },
     {
@@ -333,7 +333,7 @@
       },
       "hint": {
         "en": "We ask them to confirm. You do not wait: learning starts today.",
-        "am": "እንዲያረጋግጡ እንጠይቃለን። አይጠብቁም፤ ዛሬ ይጀምራሉ።"
+        "am": "እንዲያረጋግጡልዎ እንጠይቃቸዋለን። መጠበቅ አያስፈልግዎትም፤ ዛሬውኑ መማር ይጀምራሉ።"
       },
       "options": [
         {
@@ -359,7 +359,7 @@
           "icon": "🏫",
           "label": {
             "en": "My school or training centre",
-            "am": "ትምህርት ቤቴ ወይም የሥልጠና ማዕከል"
+            "am": "ትምህርት ቤቴ ወይም የሥልጠና ማዕከሌ"
           }
         }
       ],
@@ -378,6 +378,7 @@
       "type": "checks",
       "icon": "🧭",
       "optionsFrom": "needs",
+      "preferNotToSay": true,
       "prefill": "needsFromWays",
       "title": {
         "en": "Support that helps you",
@@ -391,6 +392,50 @@
         "en": "We ticked these from your first answer. Change anything. No medical proof. Only shared if you say yes.",
         "am": "ከመጀመሪያው መልስዎ ተመርጠዋል። ማንኛውንም ይቀይሩ። የሕክምና ማስረጃ አያስፈልግም። ካልፈቀዱ አይጋራም።"
       }
+    },
+    {
+      "id": "shareWithHost",
+      "type": "choice",
+      "icon": "🪄",
+      "title": {
+        "en": "Can the learning site adapt to you?",
+        "am": "የትምህርት ድረ-ገጹ ከእርስዎ ጋር እንዲስማማ ይፈቅዳሉ?"
+      },
+      "short": {
+        "en": "Site adapts to me",
+        "am": "ድረ-ገጹ ይስማማ"
+      },
+      "hint": {
+        "en": "It would use only your language and how you use your phone, for example to show bigger text. Never your support needs. You can change this any time in your profile.",
+        "am": "ቋንቋዎን እና ስልክዎን የሚጠቀሙበትን መንገድ ብቻ ይጠቀማል፤ ለምሳሌ ትልቅ ጽሑፍ ለማሳየት። የድጋፍ ፍላጎቶችዎን በጭራሽ አይጠቀምም። በመገለጫዎ ውስጥ በማንኛውም ጊዜ መቀየር ይችላሉ።"
+      },
+      "options": [
+        {
+          "value": "yes",
+          "icon": "✅",
+          "label": {
+            "en": "Yes, adapt the site for me",
+            "am": "አዎ፣ ድረ-ገጹ ይስማማልኝ"
+          }
+        },
+        {
+          "value": "no",
+          "icon": "✋",
+          "label": {
+            "en": "No, thank you",
+            "am": "አይ፣ አመሰግናለሁ"
+          }
+        }
+      ],
+      "validate": [
+        {
+          "rule": "required",
+          "message": {
+            "en": "Choose yes or no. You can change it later.",
+            "am": "አዎ ወይም አይ ይምረጡ። በኋላ መቀየር ይችላሉ።"
+          }
+        }
+      ]
     },
     {
       "id": "review",

@@ -1,17 +1,100 @@
 {
   "id": "employer",
   "version": 1,
-  "finish": { "en": "Post job", "am": "ሥራ ለጥፍ" },
+  "finish": {
+    "en": "Post job",
+    "am": "ሥራ ለጥፍ"
+  },
   "steps": [
-    { "id": "title", "type": "text", "icon": "💼", "title": { "en": "What is the job title?", "am": "የሥራው መጠሪያ ምንድን ነው?" }, "short": { "en": "Job title", "am": "መጠሪያ" },
-      "validate": [{ "rule": "required", "message": { "en": "Enter a job title.", "am": "የሥራ መጠሪያ ያስገቡ።" } }] },
-    { "id": "org", "type": "text", "icon": "🏢", "autocomplete": "organization", "title": { "en": "Which organisation is hiring?", "am": "የሚቀጥረው ድርጅት ማን ነው?" }, "short": { "en": "Organisation", "am": "ድርጅት" },
-      "validate": [{ "rule": "required", "message": { "en": "Enter the organisation name.", "am": "የድርጅቱን ስም ያስገቡ።" } }] },
-    { "id": "city", "type": "text", "icon": "📍", "optional": true, "title": { "en": "Which city? (optional)", "am": "የትኛው ከተማ? (አማራጭ)" }, "short": { "en": "City", "am": "ከተማ" },
-      "hint": { "en": "Leave empty for remote work.", "am": "ለርቀት ሥራ ባዶ ይተዉ።" } },
-    { "id": "supportOffered", "type": "checks", "icon": "🧭", "optionsFrom": "needs",
-      "title": { "en": "Which support does this job offer?", "am": "ይህ ሥራ ምን ዓይነት ድጋፍ ይሰጣል?" }, "short": { "en": "Support offered", "am": "የሚሰጥ ድጋፍ" },
-      "hint": { "en": "Learners can filter jobs by this list. Choose all you can really provide.", "am": "ተማሪዎች በዚህ ዝርዝር ሥራ ይፈልጋሉ።" } },
-    { "id": "review", "type": "review", "icon": "✅", "title": { "en": "Check the job", "am": "ሥራውን ያረጋግጡ" } }
+    {
+      "id": "title",
+      "type": "text",
+      "icon": "💼",
+      "title": {
+        "en": "What is the job title?",
+        "am": "የሥራው መጠሪያ ምንድን ነው?"
+      },
+      "short": {
+        "en": "Job title",
+        "am": "መጠሪያ"
+      },
+      "validate": [
+        {
+          "rule": "required",
+          "message": {
+            "en": "Enter a job title.",
+            "am": "የሥራ መጠሪያ ያስገቡ።"
+          }
+        }
+      ]
+    },
+    {
+      "id": "org",
+      "type": "text",
+      "icon": "🏢",
+      "autocomplete": "organization",
+      "title": {
+        "en": "Which organisation is hiring?",
+        "am": "የሚቀጥረው ድርጅት ማን ነው?"
+      },
+      "short": {
+        "en": "Organisation",
+        "am": "ድርጅት"
+      },
+      "validate": [
+        {
+          "rule": "required",
+          "message": {
+            "en": "Enter the organisation name.",
+            "am": "የድርጅቱን ስም ያስገቡ።"
+          }
+        }
+      ]
+    },
+    {
+      "id": "city",
+      "type": "text",
+      "icon": "📍",
+      "optional": true,
+      "title": {
+        "en": "Which city? (optional)",
+        "am": "የትኛው ከተማ? (አማራጭ)"
+      },
+      "short": {
+        "en": "City",
+        "am": "ከተማ"
+      },
+      "hint": {
+        "en": "Leave empty for remote work.",
+        "am": "ለርቀት ሥራ ባዶ ይተዉ።"
+      }
+    },
+    {
+      "id": "supportOffered",
+      "type": "checks",
+      "icon": "🧭",
+      "optionsFrom": "needs",
+      "title": {
+        "en": "Which support does this job offer?",
+        "am": "ይህ ሥራ ምን ዓይነት ድጋፍ ይሰጣል?"
+      },
+      "short": {
+        "en": "Support offered",
+        "am": "የሚሰጥ ድጋፍ"
+      },
+      "hint": {
+        "en": "Learners can filter jobs by this list. Choose all you can really provide.",
+        "am": "ተማሪዎች በዚህ ዝርዝር ሥራዎችን ያጣራሉ። በእርግጥ መስጠት የሚችሉትን ሁሉ ይምረጡ።"
+      }
+    },
+    {
+      "id": "review",
+      "type": "review",
+      "icon": "✅",
+      "title": {
+        "en": "Check the job",
+        "am": "ሥራውን ያረጋግጡ"
+      }
+    }
   ]
 }

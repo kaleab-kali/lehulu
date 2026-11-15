@@ -20,11 +20,13 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       rollupOptions: {
         input: {
-          savanna: resolve(__dirname, 'index.html'),
+          home: resolve(__dirname, 'index.html'),
+          signup: resolve(__dirname, 'signup/index.html'),
           jobs: resolve(__dirname, 'jobs/index.html'),
           partner: resolve(__dirname, 'partner/index.html'),
           employer: resolve(__dirname, 'employer/index.html'),
           embed: resolve(__dirname, 'embed/index.html'),
+          blank: resolve(__dirname, 'blank.html'),
         },
       },
     },

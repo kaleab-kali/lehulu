@@ -3,19 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Partner screen · Lehulu</title>
+    <title>Partner · Lehulu</title>
     <link rel="stylesheet" href="/src/pages.css" />
   </head>
   <body>
     <a class="skip" href="#main">Skip to requests</a>
     <header class="topbar">
-      <strong>Lehulu · Partner</strong>
-      <nav aria-label="Lehulu demo pages"><a href="../">Sign up</a><a href="../jobs/">Jobs</a><a href="../employer/">Employer</a></nav>
+      <a class="brand" href="../">Lehulu</a>
+      <nav aria-label="Main">
+        <a href="../signup/">Sign up</a>
+        <a href="../jobs/">Jobs and profile</a>
+        <a href="../partner/" aria-current="page">Partner</a>
+        <a href="../employer/">Employer</a>
+      </nav>
     </header>
     <main id="main">
-      <h1>Partner screen</h1>
-      <p class="muted">For organisations such as AAAPD that can confirm a learner who has no ID document.</p>
-      <lehulu-partner></lehulu-partner>
+      <h1>Partner</h1>
+      <p class="muted">For organisations such as AAAPD: confirm a learner who has no ID document, or register a learner who is with you.</p>
+      <lehulu-partner lang="en"></lehulu-partner>
     </main>
     <script type="module" src="/src/pages.ts"></script>
   </body>

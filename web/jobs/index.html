@@ -3,19 +3,25 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Jobs for you · Lehulu</title>
+    <title>Jobs and my profile · Lehulu</title>
     <link rel="stylesheet" href="/src/pages.css" />
   </head>
   <body>
     <a class="skip" href="#main">Skip to jobs</a>
     <header class="topbar">
-      <strong>ALX Savanna</strong>
-      <nav aria-label="Lehulu demo pages"><a href="../">Sign up</a><a href="#profile">My profile</a><a href="../partner/">Partner</a><a href="../employer/">Employer</a></nav>
+      <a class="brand" href="../">Lehulu</a>
+      <nav aria-label="Main">
+        <a href="../signup/">Sign up</a>
+        <a href="../jobs/" aria-current="page">Jobs and profile</a>
+        <a href="../partner/">Partner</a>
+        <a href="../employer/">Employer</a>
+      </nav>
     </header>
     <main id="main" class="wide">
-      <h1>Jobs</h1>
-      <lehulu-jobs></lehulu-jobs>
-      <lehulu-profile id="profile"></lehulu-profile>
+      <h1>Jobs and my profile</h1>
+      <p class="muted">Jobs are sorted by the support you need. Your choices stay on this phone.</p>
+      <lehulu-jobs signup-url="../signup/" profile-url="#profile"></lehulu-jobs>
+      <lehulu-profile id="profile" signup-url="../signup/"></lehulu-profile>
     </main>
     <script type="module" src="/src/pages.ts"></script>
   </body>

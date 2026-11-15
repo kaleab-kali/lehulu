@@ -3,20 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Employer screen · Lehulu</title>
+    <title>Employer · Lehulu</title>
     <link rel="stylesheet" href="/src/pages.css" />
   </head>
   <body>
-    <a class="skip" href="#main">Skip to the job form</a>
+    <a class="skip" href="#main">Skip to the employer screen</a>
     <header class="topbar">
-      <strong>Lehulu · Employer</strong>
-      <nav aria-label="Lehulu demo pages"><a href="../">Sign up</a><a href="../jobs/">Jobs</a><a href="../partner/">Partner</a></nav>
+      <a class="brand" href="../">Lehulu</a>
+      <nav aria-label="Main">
+        <a href="../signup/">Sign up</a>
+        <a href="../jobs/">Jobs and profile</a>
+        <a href="../partner/">Partner</a>
+        <a href="../employer/" aria-current="page">Employer</a>
+      </nav>
     </header>
     <main id="main" class="wide">
-      <h1>Employer screen</h1>
-      <p class="muted">Post a job and the support it offers. Learners filter jobs by the same list.</p>
-      <lehulu-signup flow="employer" lang="en"></lehulu-signup>
-      <lehulu-applications></lehulu-applications>
+      <h1>Employer</h1>
+      <p class="muted">Post a job with the support it offers, then read the applications for your jobs.</p>
+      <lehulu-employer lang="en"></lehulu-employer>
     </main>
     <script type="module" src="/src/pages.ts"></script>
   </body>

@@ -70,7 +70,7 @@ lehulu/
 │   ├── signup.json · apply.json · employer.json
 │   └── needs.json             # the shared list of needs (learner ↔ employer) + ways → needs
 ├── web/
-│   ├── index.html             # demo host page (Savanna-like, fixed top bar)
+│   ├── index.html             # front page; signup/, jobs/, partner/, employer/, blank.html are the other pages
 │   ├── jobs/ · partner/ · employer/ · embed/   # pages for the other screens and the iframe version
 │   ├── public/audio/{am,en}/  # recorded prompts <step-id>.opus (by people, see docs/RECORDING.md)
 │   ├── public/sign/           # interpreter clips <step-id>.webm
@@ -154,7 +154,7 @@ CREATE TABLE learners (
   dob_eth_y INTEGER, dob_eth_m INTEGER, dob_eth_d INTEGER,
   access_preferences TEXT NOT NULL DEFAULT '[]',
   id_type TEXT NOT NULL CHECK (id_type IN ('kebele', 'refugee', 'other', 'partner', 'later')),
-  id_number TEXT,                 -- optional; TODO(F21): encrypt at rest
+  id_number TEXT,                 -- optional; AES-256-GCM encrypted (migration 0003, auth.rs)
   partner_id TEXT REFERENCES partners(id),
   id_status TEXT NOT NULL CHECK (id_status IN ('not_given', 'not_checked', 'waiting_partner', 'confirmed_by_partner')),
   created_at TEXT NOT NULL,
@@ -228,26 +228,39 @@ CREATE TABLE consent_log (
 
 ---
 
-## 5. API (v1) — as built
+## 5. API (v1): as built
 
-| Method | Path | What | Auth (F13) |
+| Method | Path | What | Who may call |
 |---|---|---|---|
-| GET | `/v1/flows/{id}` | A flow JSON (`signup`, `apply`, `employer`, `needs`) | public |
-| POST | `/v1/drafts` | Start autosave, returns `resumeCode`; `sendLinkTo` sends an SMS | learner |
-| PUT / GET | `/v1/drafts/{code}` | Autosave after each question / resume | learner |
-| POST | `/v1/learners` | Create account from the finished flow | learner |
-| GET / PATCH / DELETE | `/v1/learners/{id}` | Profile, edit, delete (right to erasure) | learner |
-| GET | `/v1/learners/{id}/preferences` | Language + access preferences only, for the host | host, with consent (F19) |
-| GET | `/v1/jobs` | Jobs + support offered; `Accept: application/ld+json` → schema.org JobPosting | public |
-| POST | `/v1/jobs` | Post a job with support offered | employer token |
-| GET | `/v1/jobs/{id}/applications` | Applications; support needs only where the learner said yes | employer token |
-| POST | `/v1/applications` | Apply: `why` text and/or `whyAudio` (a recording id) | learner |
-| POST | `/v1/media` | Upload a voice answer (raw `audio/*` body, max 5 MB) → `{ id, url }` | learner |
-| GET | `/v1/media/{id}` | Play a recording | learner, or the employer/partner they chose (F13) |
-| GET | `/v1/partners` | Partner list | public |
-| GET | `/v1/partners/{id}/vouches` | Learners waiting for confirmation | partner token |
-| POST | `/v1/partners/{id}/vouches/{learnerId}` | `{ "decision": "confirm" \| "decline" }` | partner token |
-| GET | `/healthz` · `/openapi.json` · `/docs` · `/dev/sms` | Health, spec, Swagger UI, SMS simulator | — |
+| POST | `/oauth/token` | OAuth 2.0 client credentials → 12-hour bearer token (`scope` = `partner:<id>` or `employer:<id>`) | partner / employer |
+| POST | `/v1/auth/code` · `/v1/auth/verify` | Learner sign-in: SMS code (same answer whether or not the number has an account); shared phones get an account chooser | anyone |
+| POST · GET | `/v1/auth/signout` · `/v1/me` | End this device's session · the signed-in learner | learner |
+| POST | `/v1/link` | Host server exchanges a one-time `linkToken` (1 h) for the learner's identity | host server |
+| GET | `/v1/flows/{id}` | A flow JSON (`signup`, `apply`, `employer`, `needs`) | anyone |
+| POST | `/v1/drafts` | Start autosave, returns an 8-character `resumeCode`; `sendLinkTo` texts a `?resume=` link (max 3) | anyone |
+| PUT / GET | `/v1/drafts/{code}` | Autosave after each question / resume | holder of the code |
+| POST | `/v1/learners` | Create account → learner, `token`, `linkToken` | anyone |
+| GET / PATCH / DELETE | `/v1/learners/{id}` | Profile, edit, delete (right to erasure) | that learner |
+| GET | `/v1/learners/{id}/export` | Everything held: profile, applications, recordings, consent log | that learner |
+| GET | `/v1/learners/{id}/preferences` | Language + access preferences only | that learner, if they agreed (`shareWithHost`) |
+| GET | `/v1/jobs` | Jobs + support offered; `Accept: application/ld+json` → schema.org JobPosting | anyone |
+| POST | `/v1/jobs` | Post a job with support offered | employer |
+| GET | `/v1/jobs/{id}/applications` | Applications with phone; support needs only where the learner said yes | the employer that posted the job |
+| POST | `/v1/applications` | Apply: `why` text and/or `whyAudio` | learner |
+| POST | `/v1/media` | Upload a voice answer (raw `audio/*` body, max 5 MB) → `{ id, url }` | anyone (owned once used, or at once if signed in) |
+| GET | `/v1/media/{id}` | Play a recording | the owner; an employer for applications to its jobs; a partner for learners who chose it |
+| GET | `/v1/partners` | Partner list | anyone |
+| GET | `/v1/partners/{id}/vouches` | Learners waiting for confirmation | that partner |
+| POST | `/v1/partners/{id}/vouches/{learnerId}` | `{ "decision": "confirm" \| "decline" }` | that partner |
+| POST | `/v1/partners/{id}/registrations` | Register a learner who is present; account made only when they enter the texted code | that partner |
+| GET | `/healthz` · `/openapi.json` · `/docs` · `/dev/sms` | Health, spec, Swagger UI, SMS simulator (DEMO_MODE only) | |
+
+**Security as built.** Tokens are 32 random bytes; only their SHA-256 is stored (also for SMS codes, max 5 tries
+and 5 codes a day per number). Learner sessions never expire (no time limits) and end on sign-out or deletion.
+ID numbers are encrypted with AES-256-GCM. CORS is closed unless `ALLOWED_ORIGINS` lists the host. Responses carry
+`X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer`. Demo secrets (`<id>-demo`) work only while
+`DEMO_MODE=true` and are removed at start-up otherwise. A signed webhook (`WEBHOOK_URL`) carries ids and statuses
+only. Retention: unused accounts after `RETENTION_DAYS`, unclaimed recordings after 2 days.
 
 Every error: `{ "error": { "code": "...", "message": "plain words + how to fix", "field": "..." } }`
 
@@ -257,8 +270,10 @@ Every error: `{ "error": { "code": "...", "message": "plain words + how to fix",
 1. The component loads `signup.json` and renders step 1.
 2. After each **Next**, the client validates, then `PUT /v1/drafts/{code}` (in demo mode: browser storage).
 3. Focus moves to the next question heading, so the screen reader reads “Question 4 of 9. …”.
-4. On the review screen, **Create my account** → `POST /v1/learners`. The draft is deleted.
-5. The component fires `lehulu:signup-complete` and `lehulu:preferences` to the host page.
+4. On the review screen, **Create my account** → `POST /v1/learners`. The draft is deleted and the returned
+   token is kept on the device as the learner's session.
+5. The component fires `lehulu:signup-complete` (with `linkToken`) and, only if the learner said yes to "Can the
+   learning site adapt to you?", `lehulu:preferences`. The host can call `adaptPage()` from `lehulu.js`.
 
 **Partner vouch**
 1. Learner picks “No document, a partner can vouch for me” + AAAPD → a `vouches` row with status `requested`. `id_status = waiting_partner`. Learning is not blocked.
@@ -294,39 +309,3 @@ Every error: `{ "error": { "code": "...", "message": "plain words + how to fix",
 - No analytics or third-party scripts. Retention set by `RETENTION_DAYS`.
 
 ---
-
-## 9. Build order: features step by step
-
-**Live status is in [FEATURES.md](FEATURES.md).** The scaffold already includes F0–F6, F10, F11, F14, F15, F19, F20 and F22.
-
-Estimates are for a person working with an AI coding assistant, including review and a TalkBack check. **Done** means it passes keyboard, NVDA or TalkBack, and axe.
-
-| # | Feature | Owner | Depends on | Est. | Done when |
-|---|---|---|---|---|---|
-| F0 | Repo, CI, Pages workflow, Savanna page with script tag | D | — | 1 h | Empty component shows on the live link |
-| F1 | Flow file format + `needs.json` + `signup.json` | B + A | — | 0.5 h | Team agrees, both sides load it |
-| F2 | Question screen: heading, hint, text/tel, errors, Back/Next, focus | B | F1 | 2 h | TalkBack reads question, label, error |
-| F3 | Choice, checks, Ethiopian-calendar date, review with Change | B | F2 | 2 h | Main sign-up completes by keyboard |
-| F4 | `DataStore` with LocalStore, autosave + continue later | B | F2 | 1 h | Reload keeps answers; no timers |
-| F5 | Server skeleton: config, errors, SQLite, migrations, healthcheck, Docker | A | — | 1.5 h | `docker compose up` serves the page |
-| F6 | Learners + drafts API, OpenAPI `/docs` | A | F5 | 1.5 h | Sign-up saved in SQLite through ApiStore |
-| F7 | Access modes: listen, big, speak (voice-first) | B | F3 | 2 h | Same flow behaves differently per first answer |
-| F8 | Voice button (MediaRecorder, read-back, edit) + upload | B + A | F2, F6 | 1.5 h | Recording saved; text editable |
-| F9 | Pictures mode + play button + recorded Amharic prompts | C | F7 | 2 h | Low-literacy path works with and without sound |
-| F10 | ID routes + partner vouch API + partner screen | A + C | F6 | 2 h | Vouch request confirmed from `/partner` |
-| F11 | Support needs pre-ticked from ways | B | F7 | 0.5 h | Needs match first answer, editable |
-| F12 | Profile view: edit, add ID later, delete | B + A | F6 | 1.5 h | Change one answer and it saves |
-| F13 | Jobs API + JSON-LD + employer form + OAuth token | A | F6 | 2 h | Posted job appears in learner list; JSON-LD validates |
-| F14 | Job list with on-device filter + live count | B | F13 | 1 h | Count announced; titles are headings |
-| F15 | Apply flow (reuse engine), share yes/no, employer view | B + A | F8, F13 | 1.5 h | Employer sees needs only when shared |
-| F16 | Sign mode: interpreter clips, lazy-load in data-saver | C | F7 | 1.5 h | Clip per sign-up question, text always shown |
-| F17 | Amharic interface + `lang` attributes | C | F3 | 1 h | NVDA switches voice on Amharic |
-| F18 | SMS simulator + “continue later” link + partner register-with-consent | A | F6 | 1.5 h | Code at `/dev/sms` completes consent |
-| F19 | Host events (`lehulu:preferences`) shown on Savanna page | B | F7 | 0.5 h | Savanna page enlarges text when “big” chosen |
-| F20 | Playwright main task in every mode + axe gate | D | F3 → | 3 h (rolling) | CI red on any serious/critical issue |
-| F21 | README, conformance report, pitch deck, cold install test | D | all | 3 h | A stranger installs from README in < 1 h |
-| — | Stretch: voice-only mode, speech-to-text (whisper-rs), offline queue, Telegram | — | — | — | Only after F0–F21 pass |
-
-**Must-have path (fail the gate or miss a requirement without it):** F0–F15, F20, F21 ≈ 30 h.
-**Should-have:** F16–F19 ≈ 4.5 h.
-**Total ≈ 34 person-hours of building.** Plan for about 45 with fixes from co-designer tests. Four people have about 50 build hours across the two days, so it fits only if the stretch list stays cut.
