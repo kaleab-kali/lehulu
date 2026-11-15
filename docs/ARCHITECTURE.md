@@ -154,7 +154,7 @@ CREATE TABLE learners (
   dob_eth_y INTEGER, dob_eth_m INTEGER, dob_eth_d INTEGER,
   access_preferences TEXT NOT NULL DEFAULT '[]',
   id_type TEXT NOT NULL CHECK (id_type IN ('kebele', 'refugee', 'other', 'partner', 'later')),
-  id_number TEXT,                 -- optional; TODO(F21): encrypt at rest
+  id_number TEXT,                 -- optional; AES-256-GCM encrypted (migration 0003, auth.rs)
   partner_id TEXT REFERENCES partners(id),
   id_status TEXT NOT NULL CHECK (id_status IN ('not_given', 'not_checked', 'waiting_partner', 'confirmed_by_partner')),
   created_at TEXT NOT NULL,
@@ -230,24 +230,37 @@ CREATE TABLE consent_log (
 
 ## 5. API (v1) — as built
 
-| Method | Path | What | Auth (F13) |
+| Method | Path | What | Who may call |
 |---|---|---|---|
-| GET | `/v1/flows/{id}` | A flow JSON (`signup`, `apply`, `employer`, `needs`) | public |
-| POST | `/v1/drafts` | Start autosave, returns `resumeCode`; `sendLinkTo` sends an SMS | learner |
-| PUT / GET | `/v1/drafts/{code}` | Autosave after each question / resume | learner |
-| POST | `/v1/learners` | Create account from the finished flow | learner |
-| GET / PATCH / DELETE | `/v1/learners/{id}` | Profile, edit, delete (right to erasure) | learner |
-| GET | `/v1/learners/{id}/preferences` | Language + access preferences only, for the host | host, with consent (F19) |
-| GET | `/v1/jobs` | Jobs + support offered; `Accept: application/ld+json` → schema.org JobPosting | public |
-| POST | `/v1/jobs` | Post a job with support offered | employer token |
-| GET | `/v1/jobs/{id}/applications` | Applications; support needs only where the learner said yes | employer token |
-| POST | `/v1/applications` | Apply: `why` text and/or `whyAudio` (a recording id) | learner |
-| POST | `/v1/media` | Upload a voice answer (raw `audio/*` body, max 5 MB) → `{ id, url }` | learner |
-| GET | `/v1/media/{id}` | Play a recording | learner, or the employer/partner they chose (F13) |
-| GET | `/v1/partners` | Partner list | public |
-| GET | `/v1/partners/{id}/vouches` | Learners waiting for confirmation | partner token |
-| POST | `/v1/partners/{id}/vouches/{learnerId}` | `{ "decision": "confirm" \| "decline" }` | partner token |
-| GET | `/healthz` · `/openapi.json` · `/docs` · `/dev/sms` | Health, spec, Swagger UI, SMS simulator | — |
+| POST | `/oauth/token` | OAuth 2.0 client credentials → 12-hour bearer token (`scope` = `partner:<id>` or `employer:<id>`) | partner / employer |
+| POST | `/v1/auth/code` · `/v1/auth/verify` | Learner sign-in: SMS code (same answer whether or not the number has an account); shared phones get an account chooser | anyone |
+| POST · GET | `/v1/auth/signout` · `/v1/me` | End this device's session · the signed-in learner | learner |
+| POST | `/v1/link` | Host server exchanges a one-time `linkToken` (1 h) for the learner's identity | host server |
+| GET | `/v1/flows/{id}` | A flow JSON (`signup`, `apply`, `employer`, `needs`) | anyone |
+| POST | `/v1/drafts` | Start autosave, returns an 8-character `resumeCode`; `sendLinkTo` texts a `?resume=` link (max 3) | anyone |
+| PUT / GET | `/v1/drafts/{code}` | Autosave after each question / resume | holder of the code |
+| POST | `/v1/learners` | Create account → learner, `token`, `linkToken` | anyone |
+| GET / PATCH / DELETE | `/v1/learners/{id}` | Profile, edit, delete (right to erasure) | that learner |
+| GET | `/v1/learners/{id}/export` | Everything held: profile, applications, recordings, consent log | that learner |
+| GET | `/v1/learners/{id}/preferences` | Language + access preferences only | that learner, if they agreed (`shareWithHost`) |
+| GET | `/v1/jobs` | Jobs + support offered; `Accept: application/ld+json` → schema.org JobPosting | anyone |
+| POST | `/v1/jobs` | Post a job with support offered | employer |
+| GET | `/v1/jobs/{id}/applications` | Applications with phone; support needs only where the learner said yes | the employer that posted the job |
+| POST | `/v1/applications` | Apply: `why` text and/or `whyAudio` | learner |
+| POST | `/v1/media` | Upload a voice answer (raw `audio/*` body, max 5 MB) → `{ id, url }` | anyone (owned once used, or at once if signed in) |
+| GET | `/v1/media/{id}` | Play a recording | the owner; an employer for applications to its jobs; a partner for learners who chose it |
+| GET | `/v1/partners` | Partner list | anyone |
+| GET | `/v1/partners/{id}/vouches` | Learners waiting for confirmation | that partner |
+| POST | `/v1/partners/{id}/vouches/{learnerId}` | `{ "decision": "confirm" \| "decline" }` | that partner |
+| POST | `/v1/partners/{id}/registrations` | Register a learner who is present; account made only when they enter the texted code | that partner |
+| GET | `/healthz` · `/openapi.json` · `/docs` · `/dev/sms` | Health, spec, Swagger UI, SMS simulator (DEMO_MODE only) | — |
+
+**Security as built.** Tokens are 32 random bytes; only their SHA-256 is stored (also for SMS codes, max 5 tries
+and 5 codes a day per number). Learner sessions never expire (no time limits) and end on sign-out or deletion.
+ID numbers are encrypted with AES-256-GCM. CORS is closed unless `ALLOWED_ORIGINS` lists the host. Responses carry
+`X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer`. Demo secrets (`<id>-demo`) work only while
+`DEMO_MODE=true` and are removed at start-up otherwise. A signed webhook (`WEBHOOK_URL`) carries ids and statuses
+only. Retention: unused accounts after `RETENTION_DAYS`, unclaimed recordings after 2 days.
 
 Every error: `{ "error": { "code": "...", "message": "plain words + how to fix", "field": "..." } }`
 
@@ -257,8 +270,10 @@ Every error: `{ "error": { "code": "...", "message": "plain words + how to fix",
 1. The component loads `signup.json` and renders step 1.
 2. After each **Next**, the client validates, then `PUT /v1/drafts/{code}` (in demo mode: browser storage).
 3. Focus moves to the next question heading, so the screen reader reads “Question 4 of 9. …”.
-4. On the review screen, **Create my account** → `POST /v1/learners`. The draft is deleted.
-5. The component fires `lehulu:signup-complete` and `lehulu:preferences` to the host page.
+4. On the review screen, **Create my account** → `POST /v1/learners`. The draft is deleted and the returned
+   token is kept on the device as the learner's session.
+5. The component fires `lehulu:signup-complete` (with `linkToken`) and, only if the learner said yes to "Can the
+   learning site adapt to you?", `lehulu:preferences`. The host can call `adaptPage()` from `lehulu.js`.
 
 **Partner vouch**
 1. Learner picks “No document, a partner can vouch for me” + AAAPD → a `vouches` row with status `requested`. `id_status = waiting_partner`. Learning is not blocked.

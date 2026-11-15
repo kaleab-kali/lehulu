@@ -83,7 +83,7 @@ Status key: **S** Supports · **PS** Partially supports · **DNS** Does not supp
 | 2.1.1 | Keyboard | A | TO TEST | Every control is a native `<button>`, `<input>`, `<select>` or `<a>`. Full main task completed by keyboard. |
 | 2.1.2 | No Keyboard Trap | A | TO TEST | Focus can always leave the component back to the Savanna page. |
 | 2.1.4 | Character Key Shortcuts | A | TO TEST | Expected N/A: no single-key shortcuts. |
-| 2.2.1 | Timing Adjustable | A | TO TEST | **No time limits anywhere.** Answers save after each question, sessions do not expire, and the consent code has no expiry in the learner flow _[or ≥ 20 h]_. Tested by leaving a form idle for _[30]_ min. |
+| 2.2.1 | Timing Adjustable | A | TO TEST | **No time limits anywhere.** Answers are kept on the phone as they are given, learner sessions do not expire, sign-in codes work for 24 h (partner-registration codes for 7 days), and "continue later" links last until the retention period. Tested by leaving a form idle for _[30]_ min. |
 | 2.2.2 | Pause, Stop, Hide | A | TO TEST | No moving, blinking or auto-updating content. The progress bar changes only on user action. |
 | 2.3.1 | Three Flashes or Below Threshold | A | TO TEST | Nothing flashes. |
 | 2.4.1 | Bypass Blocks | A | TO TEST | Component is a single landmark region with a heading. _[Host page skip link is Savanna’s responsibility.]_ |
@@ -117,7 +117,7 @@ Status key: **S** Supports · **PS** Partially supports · **DNS** Does not supp
 | 3.3.3 | Error Suggestion | AA | TO TEST | Errors say how to fix (“Enter 10 digits that start with 09 or 07, for example 0911 234 567”). |
 | 3.3.4 | Error Prevention (Legal, Financial, Data) | AA | TO TEST | A review screen with Change buttons comes before the account is created and before an application is sent. Learners can edit their profile and delete their account. |
 | 3.3.7 | Redundant Entry | A | TO TEST | Name and phone from sign-up are filled into job applications. Support needs pre-fill the job filter. |
-| 3.3.8 | Accessible Authentication (Minimum) | AA | TO TEST | No CAPTCHA or memory test. Paste allowed in all fields. Codes support `autocomplete="one-time-code"`. Password managers work. |
+| 3.3.8 | Accessible Authentication (Minimum) | AA | TO TEST | No password, CAPTCHA or memory test. Learners sign in with their phone number and a texted code (`autocomplete="one-time-code"`, so Android can fill it; paste allowed; 24 h to use it). Staff client secrets accept paste and password managers (`autocomplete="current-password"`). |
 
 ### Principle 4 — Robust
 
