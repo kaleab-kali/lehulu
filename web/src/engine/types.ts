@@ -31,6 +31,8 @@ export interface Step {
   options?: Option[];
   /** Take options from flows/needs.json instead of `options` */
   optionsFrom?: 'needs';
+  /** Add "Prefer not to say" (needs.json) as the last choice; it clears the others */
+  preferNotToSay?: boolean;
   /** Pre-tick from the learner's first answer (ways → needs) */
   prefill?: 'needsFromWays';
   /** Show this step only when another answer matches */
@@ -57,6 +59,7 @@ export interface Need {
 export interface NeedsFile {
   needs: Need[];
   fromWays: Record<string, string[]>;
+  preferNotToSay: Option;
 }
 
 export interface EthDate {

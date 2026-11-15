@@ -16,11 +16,12 @@
     <script type="module">
       import '../src/lehulu.ts';
       const q = new URLSearchParams(location.search);
-      const flow = ['signup', 'apply', 'employer', 'jobs'].includes(q.get('flow')) ? q.get('flow') : 'signup';
+      const screens = { jobs: 'lehulu-jobs', profile: 'lehulu-profile', partner: 'lehulu-partner', employer: 'lehulu-employer' };
+      const flow = ['signup', 'apply', ...Object.keys(screens)].includes(q.get('flow')) ? q.get('flow') : 'signup';
       const lang = q.get('lang') === 'am' ? 'am' : 'en';
       document.documentElement.lang = lang;
-      const el = document.createElement(flow === 'jobs' ? 'lehulu-jobs' : 'lehulu-signup');
-      if (flow !== 'jobs') el.setAttribute('flow', flow);
+      const el = document.createElement(screens[flow] ?? 'lehulu-signup');
+      if (!screens[flow]) el.setAttribute('flow', flow);
       el.setAttribute('lang', lang);
       if (q.get('job')) el.setAttribute('job-id', q.get('job'));
       document.getElementById('embed').append(el);

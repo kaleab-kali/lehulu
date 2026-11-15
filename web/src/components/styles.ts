@@ -10,7 +10,7 @@ export const base = css`
     --accent-2: var(--lehulu-accent-2, #9b84ff); /* decorative only (progress bar end) */
     --bg: var(--lehulu-bg, #ffffff);
     --raise: var(--lehulu-raise, #f6f6fa);
-    --fg: var(--lehulu-fg, #16151d);
+    --fg: var(--lehulu-fg, var(--bs-body-color, #16151d));
     --muted: var(--lehulu-muted, #5a5b6b);
     --line: var(--lehulu-line, #8b8d9c); /* field borders: 3.3:1 on white */
     --hair: var(--lehulu-hair, #e6e6ee); /* card edges: decorative */
@@ -24,9 +24,12 @@ export const base = css`
     --radius: var(--lehulu-radius, 24px);
     display: block;
     color: var(--fg);
-    font: 1rem/1.55 var(--lehulu-font, 'Noto Sans Ethiopic', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
+    /* The host's font (Bootstrap's variable on Savanna) for Latin text; Noto Sans Ethiopic for Ge'ez. */
+    font: 1rem/1.55 var(--lehulu-font, var(--bs-body-font-family, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif)), 'Noto Sans Ethiopic', sans-serif;
     color-scheme: light;
   }
+  /* Ge'ez script needs more room between lines. */
+  :host(:lang(am)), [lang='am'] { line-height: 1.7; }
   @media (prefers-color-scheme: dark) {
     :host(:not([theme='light'])) {
       --accent: var(--lehulu-accent, #b9a6ff);
@@ -108,7 +111,7 @@ export const base = css`
 
   /* ---- fields ---- */
   label.field-label { font-weight: 600; }
-  input[type='text'], input[type='tel'], select, textarea {
+  input[type='text'], input[type='tel'], input[type='password'], input[inputmode='numeric'], select, textarea {
     font: inherit; font-size: 1.05rem; color: var(--fg); background: var(--bg);
     border: 1.5px solid var(--line); border-radius: 14px; padding: 0.7rem 0.9rem; min-height: 52px; width: 100%;
   }

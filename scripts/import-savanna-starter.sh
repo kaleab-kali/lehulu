@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copies the ALX Savanna starter pages into web/public/savanna/ and adds Lehulu with one script tag,
-# so you can show Lehulu running inside real Savanna pages (Level 1).
+# so you can show Lehulu running inside real Savanna pages (Level 1), and Savanna adapting to the learner.
 # Then: cd web && pnpm run build, and open /savanna/ (Docker: http://localhost:8080/savanna/).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -41,7 +41,13 @@ if at is None:
     m = re.search(r"<main[^>]*>", html) or re.search(r"<body[^>]*>", html)
     at = m.end()
 html = html[:at] + snip + html[at:]
-html = html.replace("</body>", f'<script type="module" src="{up}lehulu.js"></script></body>', 1)
+# Savanna's side of the deal: when the learner agrees, Savanna adapts (bigger text, a note saying what
+# changed, Jobs in the sidebar). Lehulu sends lehulu:preferences only with the learner's consent.
+host = (
+    f'<script type="module">import {{ adaptPage }} from "{up}lehulu.js";'
+    f'document.addEventListener("lehulu:preferences", (e) => adaptPage(e.detail, {{ jobsUrl: "{up}jobs/" }}));</script>'
+)
+html = html.replace("</body>", f'<script type="module" src="{up}lehulu.js"></script>{host}</body>', 1)
 open(path, "w", encoding="utf-8").write(html)
 PY
 }

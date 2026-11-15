@@ -7,16 +7,16 @@
     <link rel="stylesheet" href="/src/pages.css" />
   </head>
   <body>
-    <a class="skip" href="#main">Skip to the job form</a>
+    <a class="skip" href="#main">Skip to the employer screen</a>
     <header class="topbar">
       <strong>Lehulu · Employer</strong>
       <nav aria-label="Lehulu demo pages"><a href="../">Sign up</a><a href="../jobs/">Jobs</a><a href="../partner/">Partner</a></nav>
     </header>
     <main id="main" class="wide">
       <h1>Employer screen</h1>
-      <p class="muted">Post a job and the support it offers. Learners filter jobs by the same list.</p>
-      <lehulu-signup flow="employer" lang="en"></lehulu-signup>
-      <lehulu-applications></lehulu-applications>
+      <p class="muted">Post a job and the support it offers, then read the applications for your jobs. Learners filter jobs by the same list.</p>
+      <p class="muted demo-note">Demo sign-in: client ID <code>afro-connect</code>, secret <code>afro-connect-demo</code>. The other seeded employers work the same way: <code>lideta-tech</code>, <code>merkato-supply</code>, <code>bole-media</code>. A real deployment creates secrets with <code>lehulu create-client</code>.</p>
+      <lehulu-employer lang="en"></lehulu-employer>
     </main>
     <script type="module" src="/src/pages.ts"></script>
   </body>

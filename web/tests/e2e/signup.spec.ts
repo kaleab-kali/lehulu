@@ -14,6 +14,23 @@ async function noSeriousIssues(page: Page, where: string) {
 const flow = (page: Page) => page.locator('lehulu-signup');
 const next = (page: Page) => flow(page).getByRole('button', { name: /^(Next|Create my account|Save)/ }).click();
 
+/** OAuth client credentials with the demo secret (`<id>-demo`), keyboard only. */
+async function staffSignIn(page: Page, id: string) {
+  const form = page.locator('lehulu-staff-sign-in');
+  await form.getByLabel('Client ID').fill(id);
+  await form.getByLabel('Client secret').fill(`${id}-demo`);
+  await form.getByLabel('Client secret').press('Enter');
+}
+const partnerSignIn = (page: Page) => staffSignIn(page, 'aaapd');
+
+// Seeded jobs and the employer that posted each (server/seed/jobs.json).
+const EMPLOYER_OF: Record<string, string> = {
+  'Customer support agent (Amharic)': 'afro-connect',
+  'Junior web developer': 'lideta-tech',
+  'Warehouse records assistant': 'merkato-supply',
+  'Social media assistant': 'bole-media',
+};
+
 test.beforeEach(async ({ page }) => {
   await page.goto('./');
   await page.evaluate(() => localStorage.clear());
@@ -63,22 +80,32 @@ test('@a11y sign up with no kebele ID, partner vouches, apply to a job', async (
   await f.getByRole('radio', { name: 'AAAPD' }).check();
   await next(page);
 
-  // 7. Support: pre-ticked from "I listen"
+  // 7. Support: pre-ticked from "I listen"; "Prefer not to say" is an ordinary choice
   await expect(f.getByRole('checkbox', { name: /Screen-reader-friendly/ })).toBeChecked();
+  await expect(f.getByRole('checkbox', { name: 'Prefer not to say' })).toBeVisible();
   await noSeriousIssues(page, 'support');
   await next(page);
 
-  // 8. Review and create
+  // 8. Consent: may the host site adapt?
+  await expect(f.getByRole('heading', { name: 'Can the learning site adapt to you?' })).toBeFocused();
+  await f.getByRole('radio', { name: 'Yes, adapt the site for me' }).check();
+  await next(page);
+
+  // 9. Review and create
   await noSeriousIssues(page, 'review');
   await next(page);
   await expect(f.getByRole('heading', { name: 'Your account is ready' })).toBeFocused();
   await expect(f.getByText(/waiting for your partner/)).toBeVisible();
+  // The host page adapted, because the learner said yes.
+  await expect(page.getByRole('heading', { name: 'This site adapted to how you use your phone' })).toBeVisible();
+  await noSeriousIssues(page, 'host adapted');
 
-  // Partner confirms
+  // Partner signs in and confirms
   await page.goto('partner/');
+  await partnerSignIn(page);
   await noSeriousIssues(page, 'partner');
   await page.locator('lehulu-partner').getByRole('listitem').filter({ hasText: learnerName }).getByRole('button', { name: /confirm/ }).click();
-  await expect(page.locator('lehulu-partner').getByRole('status')).toContainText('confirmed');
+  await expect(page.locator('lehulu-partner').getByRole('status').first()).toContainText('confirmed');
 
   // Jobs: filter pre-set from sign-up, count announced, titles are headings
   await page.goto('jobs/');
@@ -97,8 +124,18 @@ test('@a11y sign up with no kebele ID, partner vouches, apply to a job', async (
   await expect(apply.getByRole('heading', { name: 'Application sent' })).toBeVisible();
 });
 
-test('@a11y employer posts a job with the support it offers', async ({ page }) => {
+test('@a11y employer signs in and posts a job with the support it offers', async ({ page }) => {
   await page.goto('employer/');
+  await noSeriousIssues(page, 'employer sign-in');
+  // A wrong secret: a plain error, announced, focus on the field.
+  const form = page.locator('lehulu-staff-sign-in');
+  await form.getByLabel('Client ID').fill('afro-connect');
+  await form.getByLabel('Client secret').fill('wrong');
+  await form.getByRole('button', { name: 'Sign in' }).click();
+  await expect(form.getByRole('alert')).toContainText('do not match');
+  await expect(form.getByLabel('Client secret')).toBeFocused();
+  await staffSignIn(page, 'afro-connect');
+  await expect(page.locator('lehulu-employer').getByRole('heading', { name: 'Signed in as Afro Connect.' })).toBeFocused();
   const f = flow(page);
   await noSeriousIssues(page, 'employer');
   await f.getByRole('textbox', { name: 'What is the job title?' }).fill('Data entry clerk');
@@ -110,6 +147,10 @@ test('@a11y employer posts a job with the support it offers', async ({ page }) =
   await next(page);
   await f.getByRole('button', { name: 'Post job' }).click();
   await expect(f.getByRole('heading', { name: 'Job posted' })).toBeVisible();
+  // Only this employer's own jobs are listed for applications.
+  const received = page.locator('lehulu-applications');
+  await expect(received.getByLabel('Job', { exact: true })).toContainText('Data entry clerk');
+  await expect(received.getByLabel('Job', { exact: true })).not.toContainText('Junior web developer');
 });
 
 /** Press Tab until `target` has focus (keyboard only, no clicks). */
@@ -156,6 +197,8 @@ test('@a11y voice answers: record, play back, delete, record again; the employer
   await f.getByRole('radio', { name: /Skip for now/ }).check();
   await next(page);
   await next(page); // support needs, pre-ticked
+  await f.getByRole('radio', { name: 'No, thank you' }).check();
+  await next(page);
 
   // Review: the voice answer can be played back and changed.
   await expect(f.getByRole('heading', { name: 'Check your answers' })).toBeFocused();
@@ -195,8 +238,10 @@ test('@a11y voice answers: record, play back, delete, record again; the employer
   await apply.getByRole('button', { name: 'Send application' }).click();
   await expect(apply.getByRole('heading', { name: 'Application sent' })).toBeVisible();
 
-  // The employer can play the spoken answer and the spoken name.
+  // The employer that posted the job can play the spoken answer and the spoken name.
   await page.goto('employer/');
+  expect(EMPLOYER_OF[title], `who posted “${title}”`).toBeTruthy();
+  await staffSignIn(page, EMPLOYER_OF[title]);
   const received = page.locator('lehulu-applications');
   await received.getByLabel('Job', { exact: true }).selectOption({ label: title });
   // .first(): against a shared server, other runs may have applied to the same job by voice too.
@@ -236,6 +281,13 @@ test('@a11y inside a real Savanna page: keyboard only, not hidden under the fixe
     return bars.some((b) => getComputedStyle(b).visibility !== 'hidden' && b.getBoundingClientRect().bottom > top + 4);
   });
   expect(covered).toBe(false);
+
+  // Savanna's side: when a learner agrees, Savanna adapts (bigger text, a note, Jobs in its own menu).
+  await page.evaluate(() => document.dispatchEvent(new CustomEvent('lehulu:preferences', { detail: { language: 'en', accessPreferences: ['big', 'listen'] } })));
+  await expect(page.getByRole('heading', { name: 'This site adapted to how you use your phone' })).toBeVisible();
+  // (On phones Savanna's sidebar is collapsed, so check the element rather than its visibility.)
+  await expect(page.locator('#sidebar [data-lehulu-jobs] a', { hasText: 'Jobs' })).toHaveCount(1);
+  expect(await page.evaluate(() => document.documentElement.classList.contains('lehulu-big'))).toBe(true);
 });
 
 test('works at 400% zoom width (320 CSS px) without sideways scrolling', async ({ page }) => {

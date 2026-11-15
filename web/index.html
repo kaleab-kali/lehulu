@@ -18,7 +18,7 @@
     </header>
     <main id="main">
       <h1>Join Savanna</h1>
-      <p class="muted">Sign up below. There is no time limit, and you can stop and continue later.</p>
+      <p class="muted">Sign up below. There is no time limit, and you can stop and continue later. Already have an account? <a href="jobs/#profile">Sign in</a>.</p>
 
       <!-- Level 1: this one tag (plus the script below) is all a host page needs. -->
       <lehulu-signup lang="en" jobs-url="jobs/" profile-url="jobs/#profile"></lehulu-signup>
@@ -29,6 +29,7 @@
         <summary>How this page added Lehulu</summary>
         <pre><code>&lt;script type="module" src="https://YOUR-LEHULU-HOST/lehulu.js"&gt;&lt;/script&gt;
 &lt;lehulu-signup lang="am" jobs-url="/jobs"&gt;&lt;/lehulu-signup&gt;</code></pre>
+        <p>The API is the server <code>lehulu.js</code> came from. To use another one, add <code>api-base="https://…"</code>. That server must list your site in <code>ALLOWED_ORIGINS</code>.</p>
         <p>To try it inside the real Savanna starter pages, run <code>scripts/import-savanna-starter.sh</code>.</p>
       </details>
     </main>

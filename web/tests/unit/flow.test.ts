@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import signup from '@flows/signup.json';
-import { needsFromWays, validateStep, visibleSteps } from '../../src/engine/flow';
+import { NONE, needsFromWays, optionsFor, toggleCheck, validateStep, visibleSteps } from '../../src/engine/flow';
 import { normalisePhone } from '../../src/engine/validators';
 import type { Flow } from '../../src/engine/types';
 
@@ -27,7 +27,14 @@ describe('flow engine', () => {
   });
 
   it('pre-ticks support from how the learner uses their phone', () => {
-    expect(needsFromWays(['listen', 'sign']).sort()).toEqual(['sign', 'sr', 'text', 'time']);
+    expect(needsFromWays(['listen', 'sign']).sort()).toEqual(['captions', 'sign', 'sr', 'text', 'time']);
+  });
+
+  it('offers "Prefer not to say" as an ordinary choice on the support question, and it clears the others', () => {
+    const support = flow.steps.find((s) => s.id === 'supportNeeds')!;
+    expect(optionsFor(support).at(-1)?.value).toBe(NONE);
+    expect(toggleCheck(['sr', 'time'], NONE, true)).toEqual([NONE]);
+    expect(toggleCheck([NONE], 'sr', true)).toEqual(['sr']);
   });
 
   it('normalises Ethiopian phone numbers', () => {

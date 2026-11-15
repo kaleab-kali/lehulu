@@ -44,7 +44,8 @@ a { color: var(--accent); text-underline-offset: 0.18em; }
 
 main { max-width: 36rem; margin: 0 auto; padding: 2rem max(16px, env(safe-area-inset-left)) 4rem; display: grid; gap: 1.25rem; }
 main.wide { max-width: 72rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr)); align-items: start; }
-main.wide > h1, main.wide > p { grid-column: 1 / -1; }
+main.wide > h1, main.wide > p, main.wide > lehulu-employer { grid-column: 1 / -1; }
+.demo-note { background: var(--surface); border: 1px dashed var(--hair); border-radius: 14px; padding: .6rem .9rem; }
 h1 { margin: 0; font-size: clamp(2rem, 1.4rem + 2.4vw, 2.75rem); line-height: 1.1; font-weight: 600; letter-spacing: -.02em; }
 .muted { color: var(--muted); }
 pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--hair); padding: .9rem; border-radius: 16px; font-size: .85rem; }

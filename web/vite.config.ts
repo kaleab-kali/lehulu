@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => {
           partner: resolve(__dirname, 'partner/index.html'),
           employer: resolve(__dirname, 'employer/index.html'),
           embed: resolve(__dirname, 'embed/index.html'),
+          blank: resolve(__dirname, 'blank.html'),
         },
       },
     },
