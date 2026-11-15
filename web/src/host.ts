@@ -1,7 +1,7 @@
 // What a host platform (like Savanna) can do with the `lehulu:preferences` event. Lehulu only sends this
 // event when the learner agreed ("Can the learning site adapt to you?"). It never contains support needs.
 //
-//   import { adaptPage } from 'https://YOUR-LEHULU-HOST/lehulu.js';
+//   import { adaptPage } from 'https://lehulu.com/lehulu.js';
 //   document.addEventListener('lehulu:preferences', (e) => adaptPage(e.detail, { jobsUrl: '/jobs/' }));
 
 export interface Preferences {

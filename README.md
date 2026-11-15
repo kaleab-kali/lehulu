@@ -1,7 +1,7 @@
 # Lehulu (ለሁሉ, "for everyone")
 
 Track 1, Accessible onboarding · Digital Bridge Accessibility Hackathon 2026.
-Team: _add names_ · Co-designer: _add name_
+Team: Kaleab Girma, Melaku Abebe, Leulseged Bekele, Ezana Tegegne · Co-designer: _add name_
 
 ![Lehulu front page](docs/screenshots/front-page.jpg)
 
@@ -28,7 +28,7 @@ The second question, **How do you use your phone?**, sets how every later screen
 |---|---|---|
 | is blind | I listen (screen reader) | Announces every question and error, moves the cursor where it is needed, pre-ticks extra time |
 | has low vision | Big and simple | Uses large text and 60-pixel buttons; works at 400% zoom with no sideways scrolling |
-| is Deaf | Sign language | Keeps everything in writing, needs no sound, shows sign videos where recorded, offers interpreter and captions as support |
+| is Deaf | Sign language | Keeps everything in writing, needs no sound, shows a picture for each question and picture choices, offers interpreter and captions as support |
 | cannot type easily | I speak my answers | Puts **Answer by voice** first; the recording is the answer; no time limits, no dragging |
 | reads little | Pictures and audio, few words | Shows choices as picture tiles and reads each question aloud |
 | has little data | Save my data | Loads video only when tapped; keeps every answer on the phone if the signal drops |
@@ -66,7 +66,7 @@ four settings that turn this off.
 | http://localhost:8080/employer/ | Employer screen |
 | http://localhost:8080/blank.html | The sign-up alone on a page with no other styles |
 | http://localhost:8080/docs | API documentation |
-| http://localhost:8080/savanna/ | Inside the real Savanna pages, after `bash scripts/import-savanna-starter.sh` |
+| http://localhost:8080/savanna/pages/homepage-v1-paced.html | Inside the real Savanna dashboard |
 
 ## Testing with the co-designer
 
@@ -84,7 +84,7 @@ Write down, in their words, anything they could not do, and add it to [docs/CONF
 ## Install, Level 1: one script tag
 
 ```html
-<script type="module" src="https://YOUR-LEHULU-HOST/lehulu.js"></script>
+<script type="module" src="https://lehulu.com/lehulu.js"></script>
 <lehulu-signup lang="am" jobs-url="/jobs" profile-url="/profile"></lehulu-signup>
 ```
 
@@ -116,7 +116,7 @@ Make your platform adapt in one line (this is what the Savanna demo does):
 
 ```html
 <script type="module">
-  import { adaptPage } from 'https://YOUR-LEHULU-HOST/lehulu.js';
+  import { adaptPage } from 'https://lehulu.com/lehulu.js';
   document.addEventListener('lehulu:preferences', (e) => adaptPage(e.detail, { jobsUrl: '/jobs' }));
 </script>
 ```
@@ -130,7 +130,7 @@ and `--lehulu-accent`, `--lehulu-soft`, `--lehulu-font`, `--lehulu-radius`, `--l
 fixed header) for everything else. Styles stay inside the shadow root.
 
 **Iframe** for sites that block scripts:
-`<iframe src="https://YOUR-LEHULU-HOST/embed/?flow=signup&lang=am" title="Lehulu sign-up" allow="microphone" style="width:100%;min-height:640px;border:0"></iframe>`
+`<iframe src="https://lehulu.com/embed/?flow=signup&lang=am" title="Lehulu sign-up" allow="microphone" style="width:100%;min-height:640px;border:0"></iframe>`
 (`flow` = `signup`, `profile`, `jobs`, `partner`, `employer`).
 
 ## Install, Level 2: the API
@@ -324,7 +324,9 @@ run on a desktop and a phone viewport, in demo mode and against the server). Sta
 
 ## Libraries and their licences
 
-Web: lit (BSD-3-Clause), @fontsource/noto-sans-ethiopic (OFL-1.1). Build and test only: Vite, Vitest (MIT),
+Web: lit (BSD-3-Clause), @fontsource/noto-sans-ethiopic (OFL-1.1), icons in the style of Lucide (ISC) and the
+sign-language icon from Tabler Icons (MIT). The `web/public/savanna/` pages are ALX's Savanna starter, unchanged
+except for the Lehulu script tag. Build and test only: Vite, Vitest (MIT),
 TypeScript, Playwright (Apache-2.0), @axe-core/playwright (MPL-2.0).
 Server: axum, tokio, tower, tower-http, hyper, tracing (MIT); sqlx, serde, serde_json, utoipa, utoipa-swagger-ui
 (Swagger UI is Apache-2.0), chrono, uuid, rand, sha2, hmac, aes-gcm, hex, reqwest, rustls, thiserror (MIT or

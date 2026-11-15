@@ -8,8 +8,6 @@ web/test-results/
 web/playwright-report/
 .DS_Store
 
-# ALX Savanna starter pages: third-party, re-created by scripts/import-savanna-starter.sh
-web/public/savanna/
 
 # Hackathon training material (third-party slides and PDFs), kept locally only
 docs/*.pdf

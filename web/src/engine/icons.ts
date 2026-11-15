@@ -12,6 +12,8 @@ const P: Record<string, string> = {
   image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
   text: '<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>',
   hand: '<path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/>',
+  // The "I love you" hand sign, the common symbol for sign language (Tabler Icons, MIT).
+  sign: '<path d="M11 11.5v-1a1.5 1.5 0 0 1 3 0v1.5"/><path d="M17 12v-6.5a1.5 1.5 0 0 1 3 0v10.5a6 6 0 0 1-6 6h-2h.208a6 6 0 0 1-5.012-2.7a69.74 69.74 0 0 1-.196-.3c-.312-.479-1.407-2.388-3.286-5.728a1.5 1.5 0 0 1 .536-2.022a1.867 1.867 0 0 1 2.28.28l1.47 1.47"/><path d="M14 10.5a1.5 1.5 0 0 1 3 0v1.5"/><path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5"/>',
   signal: '<path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/>',
   phone: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
@@ -51,7 +53,7 @@ const P: Record<string, string> = {
 /** Emoji used in flows/*.json and needs.json → icon name. */
 const EMOJI: Record<string, string> = {
   '🌐': 'globe', '🔈': 'volume', '🔊': 'volume', '🎤': 'mic', '🖼': 'image', '👆': 'text', '🔠': 'text',
-  '🤟': 'hand', '📶': 'signal', '📱': 'phone', '👤': 'user', '📅': 'calendar', '🪪': 'idcard', '📄': 'file',
+  '🤟': 'sign', '📶': 'signal', '📱': 'phone', '👤': 'user', '📅': 'calendar', '🪪': 'idcard', '📄': 'file',
   '🤝': 'users', '⏳': 'clock', '⏭': 'skip', '✅': 'check', '✋': 'no', '♿': 'access', '🏠': 'home',
   '🏢': 'building', '🏫': 'school', '💡': 'bulb', '💬': 'message', '💼': 'briefcase', '📍': 'pin', '📨': 'mail',
   '🔒': 'lock', '🔢': 'hash', '🔤': 'captions', '🗂': 'folder', '🧭': 'compass', '🪄': 'sparkles',
