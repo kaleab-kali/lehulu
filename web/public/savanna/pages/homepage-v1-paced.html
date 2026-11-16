@@ -76,8 +76,7 @@
       >
         <ul class="px-2">
           <li>
-            <a href="#" rel="noreferrer" target="_self"
-              ><div class="icon active"><i aria-hidden="true" class="fa-solid fa-home"></i></div>
+            <a href="homepage-v1-paced.html" rel="noreferrer" target="_self"><div class="icon active"><i aria-hidden="true" class="fa-solid fa-home"></i></div>
               <div class="ps-3 overflow-hidden text-nowrap" style="display: block">Home</div></a
             >
           </li>
@@ -111,6 +110,12 @@
               <div class="ps-3 overflow-hidden text-nowrap" style="display: block">Evaluation quizzes</div></a
             >
           </li>
+          <hr title="Lehulu" />
+          <li><a href="lehulu-signup.html"><div class="icon"><i aria-hidden="true" class="fa-solid fa-user-plus"></i></div><div class="ps-3 overflow-hidden text-nowrap" style="display: block">Sign up</div></a></li>
+          <li><a href="lehulu-jobs.html"><div class="icon"><i aria-hidden="true" class="fa-solid fa-briefcase"></i></div><div class="ps-3 overflow-hidden text-nowrap" style="display: block">Jobs</div></a></li>
+          <li><a href="lehulu-profile.html"><div class="icon"><i aria-hidden="true" class="fa-solid fa-id-card"></i></div><div class="ps-3 overflow-hidden text-nowrap" style="display: block">My profile</div></a></li>
+          <li><a href="lehulu-partner.html"><div class="icon"><i aria-hidden="true" class="fa-solid fa-handshake"></i></div><div class="ps-3 overflow-hidden text-nowrap" style="display: block">Partner (AAAPD)</div></a></li>
+          <li><a href="lehulu-employer.html"><div class="icon"><i aria-hidden="true" class="fa-solid fa-building"></i></div><div class="ps-3 overflow-hidden text-nowrap" style="display: block">Employer</div></a></li>
           <hr title="My resources" />
           <li>
             <a href="#" rel="noreferrer" target="_self"
@@ -159,7 +164,7 @@
             class="bg-white border-top border-end position-fixed p-2 bottom-0 start-0 mb-0"
             style="background-color: rgb(255, 255, 255); border-color: rgb(238, 238, 238)"
           >
-            <a href="#"
+            <a href="lehulu-profile.html"
               ><div class="image"><i aria-hidden="true" class="fa-solid fa-user"></i></div>
               <div class="flex-grow-1 ps-3 overflow-hidden text-nowrap" style="display: block">My Profile</div></a
             >
@@ -261,7 +266,7 @@
               </ul>
             </div>
           </div>
-        </div><section aria-label="Sign up for Savanna" style="max-width:36rem;margin:1.5rem auto;padding:0 16px"><lehulu-signup lang="en" theme="light" jobs-url="../../jobs/" style="--lehulu-accent:#b3261e;--lehulu-accent-2:#e57373;--lehulu-soft:#fbe9e8;--lehulu-scroll-offset:12.5rem"></lehulu-signup><div id="lehulu-note" style="margin-top:1rem"></div></section>
+        </div><section aria-label="Sign up for Savanna" style="max-width:36rem;margin:1.5rem auto;padding:0 16px"><lehulu-signup lang="en" theme="light" jobs-url="lehulu-jobs.html" profile-url="lehulu-profile.html" style="--lehulu-accent:#b3261e;--lehulu-accent-2:#e57373;--lehulu-soft:#fbe9e8;--lehulu-scroll-offset:12.5rem"></lehulu-signup><div id="lehulu-note" style="margin-top:1rem"></div></section>
       </div>
 
       <article class="">
@@ -11942,5 +11947,5 @@ alert(example);
     <script src="../assets/js/popper.js"></script>
     <script src="../assets/js/bootstrap.bundle.js"></script>
     <script src="../assets/js/static-page.js"></script>
-  <script type="module" src="../../lehulu.js"></script><script type="module">import { adaptPage } from "../../lehulu.js";document.addEventListener("lehulu:preferences", (e) => adaptPage(e.detail, { jobsUrl: "../../jobs/", noteIn: "#lehulu-note" }));</script></body>
+  <script type="module" src="../../lehulu.js"></script><script type="module">import { adaptPage } from "../../lehulu.js";document.addEventListener("lehulu:preferences", (e) => adaptPage(e.detail, { jobsUrl: "lehulu-jobs.html", noteIn: "#lehulu-note" }));</script></body>
 </html>

@@ -536,6 +536,72 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_learners_sign_in_with_the_fixed_code_and_show_on_partner_and_employer_screens() {
+        let (app, st) = app_with(Config::for_tests()).await;
+        crate::db::seed_test_learners(&st).await.unwrap();
+        crate::db::seed_test_learners(&st).await.unwrap(); // a restart adds no copies
+
+        for _ in 0..6 {
+            // more than the daily limit: testers share these accounts
+            let (s, sent) = call(
+                &app,
+                "POST",
+                "/v1/auth/code",
+                Some(json!({ "phone": "0911000001" })),
+            )
+            .await;
+            assert_eq!(s, StatusCode::ACCEPTED, "{sent}");
+            assert_eq!(sent["demoCode"], "123456");
+        }
+        let (s, v) = call(
+            &app,
+            "POST",
+            "/v1/auth/verify",
+            Some(json!({ "phone": "0911000001", "code": "123456" })),
+        )
+        .await;
+        assert_eq!(s, StatusCode::OK, "{v}");
+        assert_eq!(v["signedIn"]["name"], "Hanna Tesfaye");
+
+        let partner = staff(&app, "aaapd").await;
+        let (_, waiting) = call_as(
+            &app,
+            "GET",
+            "/v1/partners/aaapd/vouches",
+            None,
+            Some(&partner),
+        )
+        .await;
+        assert!(
+            waiting
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|w| w["name"] == "Hanna Tesfaye"),
+            "{waiting}"
+        );
+
+        let employer = staff(&app, "lideta-tech").await;
+        let (_, apps) = call_as(
+            &app,
+            "GET",
+            "/v1/jobs/job-web-dev/applications",
+            None,
+            Some(&employer),
+        )
+        .await;
+        let apps = apps.as_array().unwrap().clone();
+        assert_eq!(apps.len(), 1);
+        assert_eq!(apps[0]["learnerName"], "Dawit Bekele");
+        assert_eq!(apps[0]["supportRequested"], json!(["big", "time"]));
+
+        // Outside the test system, the same phone gets a random code.
+        let mut prod = Config::for_tests();
+        prod.demo_mode = false;
+        assert!(!crate::db::is_test_phone(&prod, "0911000001"));
+    }
+
+    #[tokio::test]
     async fn learner_signs_in_by_sms_code_and_a_shared_phone_chooses_the_account() {
         let app = app().await;
         let (first, _) = sign_up(&app, learner("later", None)).await;

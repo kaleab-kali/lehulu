@@ -171,14 +171,19 @@ pub async fn send_code(
             .bind(&since)
             .fetch_one(&st.pool)
             .await?;
-    if sent_today >= MAX_CODES_PER_DAY {
+    let test_phone = registration.is_none() && crate::db::is_test_phone(&st.cfg, phone);
+    if sent_today >= MAX_CODES_PER_DAY && !test_phone {
         return Err(ApiError::invalid(
             "too_many_codes",
             "phone",
             "We already sent several codes to this number today. Use the last code we sent; it still works.",
         ));
     }
-    let code = new_code();
+    let code = if test_phone {
+        crate::db::TEST_CODE.to_string()
+    } else {
+        new_code()
+    };
     sqlx::query(
         "INSERT INTO login_codes (phone, code_hash, registration_id, expires_at, created_at) VALUES (?, ?, ?, ?, ?)",
     )

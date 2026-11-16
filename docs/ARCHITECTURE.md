@@ -83,7 +83,7 @@ lehulu/
 │   │   │   ├── lehulu-partner.ts      # confirm learners without ID
 │   │   │   ├── lehulu-applications.ts # what the employer receives
 │   │   │   ├── lehulu-profile.ts      # view + delete (edit: F12)
-│   │   │   └── styles.ts              # shared, themeable, light/dark
+│   │   │   └── styles.ts              # shared, themeable, light
 │   │   ├── engine/            # flow.ts · validators.ts · modes.ts · i18n.ts · recorder.ts · fonts.ts · assets.ts · types.ts
 │   │   ├── lib/ethiopian-calendar.ts
 │   │   └── data/store.ts      # DataStore · ApiStore (Docker) · LocalStore (live demo) · session

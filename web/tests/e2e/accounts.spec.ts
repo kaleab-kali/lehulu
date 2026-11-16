@@ -6,8 +6,11 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-async function noSeriousIssues(page: Page, where: string) {
-  const r = await new AxeBuilder({ page } as unknown as ConstructorParameters<typeof AxeBuilder>[0]).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+/** `within`: only that part of the page (inside Savanna, Savanna's own header and sidebar are not ours). */
+async function noSeriousIssues(page: Page, where: string, within?: string) {
+  let axe = new AxeBuilder({ page } as unknown as ConstructorParameters<typeof AxeBuilder>[0]);
+  if (within) axe = axe.include(within);
+  const r = await axe.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
   const bad = r.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
   expect(bad.map((v) => `${v.id}: ${v.help}`), `axe on ${where}`).toEqual([]);
 }
@@ -179,19 +182,55 @@ test('@a11y "continue later": the code reopens the answers, and a reload keeps t
   await noSeriousIssues(page, 'restored from a link');
 });
 
-test('@a11y the front page explains the product, links to each screen and shows how to install it', async ({ page }) => {
+test('@a11y the front page explains the product, lists the test accounts and shows how to install it', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByRole('heading', { level: 1, name: 'Sign-up that works for everyone' })).toBeVisible();
-  for (const name of ['How it works', 'Who it works for', 'Four screens', 'Add it to your platform']) {
+  for (const name of ['Inside ALX Savanna', 'How it works', 'Test accounts', 'Add it to your platform']) {
     await expect(page.getByRole('heading', { level: 2, name })).toBeVisible();
   }
-  for (const name of [/For the learner/, /^Jobs and my profile/, /^Partner Confirm/, /^Employer Post/]) {
-    await expect(page.getByRole('main').getByRole('link', { name })).toBeVisible();
+  const accounts = page.getByRole('table');
+  for (const row of ['0911 000 001', '0911 000 002', 'aaapd-demo', 'lideta-tech-demo']) await expect(accounts).toContainText(row);
+  for (const name of ['Sign up', 'Jobs', 'My profile', 'Partner', 'Employer']) {
+    await expect(page.getByRole('navigation', { name: 'Screens' }).getByRole('link', { name, exact: true })).toBeVisible();
   }
   await expect(page.getByText('<lehulu-signup lang="am"', { exact: false })).toBeVisible();
   await noSeriousIssues(page, 'front page');
-  await page.getByRole('main').getByRole('link', { name: 'Sign up', exact: true }).click();
+  await page.getByRole('main').getByRole('link', { name: 'Open sign-up' }).click();
+  await expect(page.locator('#sidebar a[aria-current="page"]')).toHaveText('Sign up'); // Savanna's sidebar (collapsed on phones)
   await expect(page.locator('lehulu-signup').getByRole('heading', { name: 'Which language?' })).toBeVisible();
+});
+
+test('@a11y the test accounts work inside Savanna: Hanna signs in, AAAPD sees her, Lideta Tech reads Dawit’s application', async ({ page }) => {
+  await page.goto('savanna/pages/lehulu-profile.html');
+  const p = page.locator('lehulu-profile');
+  await p.getByRole('textbox', { name: 'Phone number' }).fill('0911 000 001');
+  await p.getByRole('button', { name: 'Send me a code' }).click();
+  await expect(p.getByRole('status')).toContainText('123456');
+  await p.getByRole('textbox', { name: 'Code from the SMS' }).fill('123456');
+  await p.getByRole('button', { name: 'Sign in' }).click();
+  await expect(p.getByRole('heading', { name: 'My profile' })).toBeFocused();
+  await expect(p.getByText('Hanna Tesfaye')).toBeVisible();
+  await noSeriousIssues(page, 'profile inside Savanna', '#content');
+
+  await page.goto('savanna/pages/lehulu-partner.html');
+  await page.locator('lehulu-staff-sign-in').getByRole('button', { name: 'Continue as AAAPD' }).click();
+  await expect(page.locator('lehulu-partner')).toContainText('Hanna Tesfaye');
+  await noSeriousIssues(page, 'partner inside Savanna', '#content');
+
+  await page.goto('savanna/pages/lehulu-employer.html');
+  await page.locator('lehulu-staff-sign-in').getByRole('button', { name: 'Continue as Lideta Tech' }).click();
+  await expect(page.locator('lehulu-applications')).toContainText('Dawit Bekele');
+  await expect(page.locator('lehulu-applications')).toContainText('Please use large print.');
+  await noSeriousIssues(page, 'employer inside Savanna', '#content');
+
+  // On a phone, Savanna's menu opens the sidebar with the Lehulu screens.
+  const menu = page.getByRole('button', { name: 'Menu' });
+  if (await menu.isVisible() && !(await page.getByRole('link', { name: 'Partner (AAAPD)' }).isVisible())) {
+    await menu.click();
+    await expect(menu).toHaveAttribute('aria-expanded', 'true');
+  }
+  await page.getByRole('link', { name: 'Partner (AAAPD)' }).click();
+  await expect(page).toHaveURL(/lehulu-partner\.html$/);
 });
 
 test('choosing Amharic switches the page around the sign-up too', async ({ page }) => {

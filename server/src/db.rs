@@ -139,6 +139,69 @@ pub async fn seed(pool: &SqlitePool, cfg: &Config) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
+/// Test learners sign in with this code instead of a random one. DEMO_MODE only.
+pub const TEST_CODE: &str = "123456";
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TestApplication {
+    job_id: String,
+    why: String,
+    share_support: bool,
+}
+
+#[derive(Deserialize)]
+struct TestLearner {
+    #[serde(flatten)]
+    learner: crate::routes::learners::NewLearner,
+    #[serde(default)]
+    applications: Vec<TestApplication>,
+}
+
+fn test_learners(cfg: &Config) -> Vec<TestLearner> {
+    std::fs::read_to_string(format!("{}/test-learners.json", cfg.seed_dir))
+        .map(|t| serde_json::from_str(&t).expect("seed/test-learners.json is not valid"))
+        .unwrap_or_default()
+}
+
+pub fn is_test_phone(cfg: &Config, phone: &str) -> bool {
+    cfg.demo_mode && test_learners(cfg).iter().any(|t| t.learner.phone == phone)
+}
+
+/// DEMO_MODE only: the test learners in seed/test-learners.json, so testers can sign in as a returning
+/// learner, see one waiting on the partner screen and one application on the employer screen.
+/// A test learner who was deleted comes back at the next start.
+pub async fn seed_test_learners(st: &crate::routes::AppState) -> crate::error::ApiResult<()> {
+    if !st.cfg.demo_mode {
+        return Ok(());
+    }
+    for t in test_learners(&st.cfg) {
+        let l = &t.learner;
+        let (n,): (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM learners WHERE phone = ? AND name = ?")
+                .bind(&l.phone)
+                .bind(&l.name)
+                .fetch_one(&st.pool)
+                .await?;
+        if n > 0 {
+            continue;
+        }
+        let id = crate::routes::learners::insert(st, l, &l.phone, None).await?;
+        for a in t.applications {
+            sqlx::query("INSERT INTO applications (id, job_id, learner_id, why_text, why_audio_path, support_shared, created_at) VALUES (?, ?, ?, ?, NULL, ?, ?)")
+                .bind(uuid::Uuid::new_v4().to_string())
+                .bind(&a.job_id)
+                .bind(&id)
+                .bind(&a.why)
+                .bind(a.share_support)
+                .bind(chrono::Utc::now().to_rfc3339())
+                .execute(&st.pool)
+                .await?;
+        }
+    }
+    Ok(())
+}
+
 /// DEMO_MODE only: every partner and employer without credentials can sign in with
 /// client ID `<id>` and secret `<id>-demo`.
 pub async fn enable_demo_sign_ins(pool: &SqlitePool) -> Result<(), sqlx::Error> {
