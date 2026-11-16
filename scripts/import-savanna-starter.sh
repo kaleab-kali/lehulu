@@ -54,4 +54,6 @@ PY
 inject "$DEST/index.html" "../"
 for f in "$DEST"/pages/*.html; do inject "$f" "../../"; done
 rm -rf "$TMP"
+# Lehulu's screens in Savanna's header and sidebar (lehulu-*.html), and the Lehulu group in every sidebar.
+python3 "$ROOT/scripts/make-savanna-pages.py"
 echo "Done. Savanna pages with Lehulu are in web/public/savanna/. Build the web app, then open /savanna/."
