@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Hanna Tesfaye",
+    "phone": "0911000001",
+    "language": "en",
+    "accessPreferences": ["listen"],
+    "supportNeeds": ["sr", "time"],
+    "idType": "partner",
+    "partner": "aaapd",
+    "shareWithHost": true,
+    "applications": []
+  },
+  {
+    "name": "Dawit Bekele",
+    "phone": "0911000002",
+    "language": "en",
+    "accessPreferences": ["big"],
+    "supportNeeds": ["big", "time"],
+    "idType": "later",
+    "shareWithHost": true,
+    "applications": [
+      {
+        "jobId": "job-web-dev",
+        "why": "I finished the ALX software course and I build small websites for shops in my area. I work best with large print and a little extra time on tests.",
+        "shareSupport": true
+      }
+    ]
+  }
+]

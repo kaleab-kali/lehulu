@@ -118,6 +118,9 @@ async fn serve() {
         tracing::info!("ALLOWED_ORIGINS is empty: only pages served by this server can call the API. Add your platform's origin to embed Lehulu elsewhere.");
     }
     let state = routes::AppState::new(pool, cfg.clone());
+    db::seed_test_learners(&state)
+        .await
+        .expect("Seeding the test learners failed");
     // Privacy policy (F21): delete what we no longer need, at start and every 6 hours.
     let retention_state = state.clone();
     tokio::spawn(async move {

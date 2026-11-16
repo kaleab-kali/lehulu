@@ -9,6 +9,7 @@
 import seedJobs from '@seed/jobs.json';
 import seedPartners from '@seed/partners.json';
 import seedEmployers from '@seed/employers.json';
+import seedTestLearners from '@seed/test-learners.json';
 import type { EthDate } from '../engine/types';
 
 export interface Learner {
@@ -295,6 +296,10 @@ interface LocalDb {
 }
 
 const KEY = 'lehulu:demo-db';
+/** Test learners (server/seed/test-learners.json) sign in with this code. Test system only. */
+export const TEST_CODE = '123456';
+type TestLearner = Omit<NewLearner, 'dobEthiopian'> & { applications: Omit<NewApplication, 'whyAudio'>[] };
+const testLearners = seedTestLearners as unknown as TestLearner[];
 const ownerOf = (jobId: string) => (seedJobs as Job[]).find((j) => j.id === jobId)?.employerId ?? null;
 
 class LocalStore implements DataStore {
@@ -313,9 +318,23 @@ class LocalStore implements DataStore {
     this.mem.registrations ??= [];
     this.mem.jobs = this.mem.jobs.map((j) => (j.employerId ? j : { ...j, employerId: ownerOf(j.id) }));
     this.mem.learners = this.mem.learners.map((l) => ({ ...l, shareWithHost: Boolean(l.shareWithHost) }));
+    this.addTestLearners(this.mem);
     return this.mem;
   }
   private save() { write(local(), KEY, this.mem); }
+  /** The test accounts are always there, so every tester can sign in as them; deleted ones come back on the next visit. */
+  private addTestLearners(db: LocalDb) {
+    for (const { applications, ...t } of testLearners) {
+      if (db.learners.some((l) => l.phone === t.phone && l.name === t.name)) continue;
+      const learner: Learner = { ...t, id: this.id(), nameAudio: null, dobEthiopian: null, idNumber: null, partner: t.partner ?? null,
+        idStatus: t.idType === 'partner' ? 'waiting_partner' : t.idType === 'later' ? 'not_given' : 'not_checked' };
+      db.learners.push(learner);
+      if (learner.idType === 'partner' && learner.partner) {
+        db.vouches.push({ learnerId: learner.id, partner: learner.partner, status: 'requested', requestedAt: new Date().toISOString() });
+      }
+      for (const a of applications) db.applications.push({ ...a, whyAudio: null, learnerId: learner.id, id: this.id(), createdAt: new Date().toISOString() });
+    }
+  }
   private id() { return crypto.randomUUID(); }
   private find(id: string) {
     const l = this.db().learners.find((x) => x.id === id);
@@ -400,7 +419,7 @@ class LocalStore implements DataStore {
     const db = this.db();
     const message = `If ${phone} has a Lehulu account, we sent a code to it by SMS. The code works for a day.`;
     if (!db.learners.some((l) => l.phone === phone)) return { message };
-    const code = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0');
+    const code = testLearners.some((t) => t.phone === phone) ? TEST_CODE : String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0');
     db.codes.push({ phone, code });
     this.save();
     return { message, demoCode: code };
