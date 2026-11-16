@@ -7,118 +7,206 @@
     <meta name="description" content="Accessible sign-up, profile and job applications for ALX Savanna and other platforms. Amharic and English, by typing or by voice, no ID document needed." />
     <link rel="stylesheet" href="/src/pages.css" />
   </head>
-  <body>
+  <body class="landing">
     <a class="skip" href="#main">Skip to content</a>
-    <header class="topbar">
-      <a class="brand" href="./" aria-current="page">Lehulu</a>
-      <nav aria-label="Main">
-        <a href="signup/">Sign up</a>
-        <a href="jobs/">Jobs and profile</a>
-        <a href="partner/">Partner</a>
-        <a href="employer/">Employer</a>
+    <div class="glass">
+      <nav class="rail" aria-label="Screens">
+        <a class="rail-logo" href="./" aria-current="page" aria-label="Lehulu home"><span aria-hidden="true">ለ</span></a>
+        <a href="savanna/pages/lehulu-signup.html" aria-label="Sign up" title="Sign up">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="4"/><path d="M3 21a7 7 0 0 1 12.5-4.3"/><path d="M19 15v6M16 18h6"/></svg>
+        </a>
+        <a href="savanna/pages/lehulu-jobs.html" aria-label="Jobs" title="Jobs">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>
+        </a>
+        <a href="savanna/pages/lehulu-profile.html" aria-label="My profile" title="My profile">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 17a3.5 3.5 0 0 1 7 0M15 10h3M15 14h3"/></svg>
+        </a>
+        <a href="savanna/pages/lehulu-partner.html" aria-label="Partner" title="Partner">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></svg>
+        </a>
+        <a href="savanna/pages/lehulu-employer.html" aria-label="Employer" title="Employer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M15 9h4a2 2 0 0 1 2 2v10M9 7h2M9 11h2M9 15h2"/></svg>
+        </a>
+        <a href="#install" aria-label="Install" title="Install">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg>
+        </a>
       </nav>
-    </header>
-    <main id="main" class="home">
-      <section class="hero" aria-labelledby="hero-h">
-        <p class="eyebrow" lang="am">ለሁሉ · for everyone</p>
-        <h1 id="hero-h">Sign-up that works for everyone</h1>
-        <p class="lead">Lehulu is the sign-up, profile and job-application part of a learning platform. A learner joins
-          by typing or by voice, in Amharic or English, without an ID document. Lehulu never asks about disability. It
-          asks how the learner uses their phone, and every screen follows that answer.</p>
-        <div class="actions">
-          <a class="button primary" href="signup/">Sign up</a>
-          <a class="button" href="#install">Add it to your platform</a>
-        </div>
-      </section>
 
-      <section aria-labelledby="how-h">
-        <h2 id="how-h">How it works</h2>
-        <ol class="steps">
-          <li><strong>The learner says how they use their phone.</strong> I listen with a screen reader, I speak my
-            answers, pictures and audio, big and simple, sign language, or save my data. Nothing about diagnosis.</li>
-          <li><strong>Every screen adapts.</strong> One question at a time, read aloud or answered by voice, picture
-            choices, large buttons. There is no time limit, and each answer is saved as it is given.</li>
-          <li><strong>No ID document is needed.</strong> A partner organisation such as AAAPD confirms who the learner is,
-            or registers someone who is with them. The learner agrees with a code on their own phone.</li>
-          <li><strong>The learner applies for jobs.</strong> Jobs offering the support they need come first, and they
-            decide, job by job, whether the employer sees their support needs.</li>
-          <li><strong>The platform adapts too, if the learner agrees.</strong> Savanna can enlarge its text, give extra
-            time on quizzes, or show its lessons with sign language, from the same answer.</li>
-        </ol>
-      </section>
+      <div class="frame">
+        <header class="bar">
+          <a class="brand" href="./">Lehulu <span lang="am">ለሁሉ</span></a>
+          <nav class="pill-nav" aria-label="On this page">
+            <a href="#how">How it works</a>
+            <a href="#accounts">Test accounts</a>
+            <a href="#install">Install</a>
+          </nav>
+          <div class="bar-end">
+            <a class="round" href="https://github.com/kaleab-kali/lehulu" aria-label="Source code on GitHub" title="Source code on GitHub">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+            </a>
+            <a class="button primary" href="savanna/pages/lehulu-signup.html">Try it in Savanna</a>
+          </div>
+        </header>
 
-      <section aria-labelledby="for-h">
-        <h2 id="for-h">Who it works for</h2>
-        <ul class="tiles plain">
-          <li><strong>Blind learners</strong><span>Every question and every error is announced by the screen reader, and the cursor goes where it is needed.</span></li>
-          <li><strong>Learners with low vision</strong><span>Large text and buttons, strong contrast, and nothing cut off at 400% zoom.</span></li>
-          <li><strong>Deaf learners</strong><span>Everything is written; nothing needs sound. Sign language videos for each question, and interpreters for interviews.</span></li>
-          <li><strong>Learners who cannot type easily</strong><span>A spoken answer counts as the answer. Every control works by keyboard or switch, with no dragging.</span></li>
-          <li><strong>Learners who read little</strong><span>Picture choices, questions read aloud, and the name given by voice.</span></li>
-          <li><strong>Learners on a slow or costly connection</strong><span>About 110 KB, videos only when tapped, and nothing lost if the signal drops.</span></li>
-        </ul>
-      </section>
+        <main id="main">
+          <section class="intro" aria-labelledby="hero-h">
+            <h1 id="hero-h">Sign-up that works<br />for everyone</h1>
+            <p>Lehulu is the sign-up, profile and job-application part of a learning platform. Learners join by typing
+              or by voice, in Amharic or English, with no ID document. It never asks about disability; it asks how the
+              learner uses their phone, and every screen follows that answer.</p>
+          </section>
 
-      <section aria-labelledby="screens-h">
-        <h2 id="screens-h">Four screens</h2>
-        <ul class="tiles">
-          <li>
-            <a href="signup/">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-              <strong>Sign up</strong>
-              <span>For the learner, in Amharic or English.</span>
-            </a>
-          </li>
-          <li>
-            <a href="jobs/">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m16 8-2 6-6 2 2-6z"/></svg>
-              <strong>Jobs and my profile</strong>
-              <span>Apply for jobs; change, download or delete your data.</span>
-            </a>
-          </li>
-          <li>
-            <a href="partner/">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8"/><path d="M22 21a7 7 0 0 0-5-6.7"/></svg>
-              <strong>Partner</strong>
-              <span>Confirm a learner with no ID, or register one.</span>
-            </a>
-          </li>
-          <li>
-            <a href="employer/">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-              <strong>Employer</strong>
-              <span>Post a job with the support it offers; read applications.</span>
-            </a>
-          </li>
-          <li data-savanna hidden>
-            <a href="savanna/pages/homepage-v1-paced.html">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10 12 3l9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
-              <strong>Inside Savanna</strong>
-              <span>The same sign-up inside the Savanna dashboard.</span>
-            </a>
-          </li>
-        </ul>
-      </section>
+          <div class="bento">
+            <section class="card stat" id="c-ways" aria-labelledby="s-ways">
+              <h2 id="s-ways">Ways to answer</h2>
+              <p class="big">6</p>
+              <p class="note">Screen reader, voice, pictures, large print, sign, low data</p>
+            </section>
 
-      <section class="install" id="install" aria-labelledby="install-h">
-        <h2 id="install-h">Add it to your platform</h2>
-        <p>1. Load the script once, and place the sign-up where it should appear.</p>
-        <pre><code>&lt;script type="module" src="https://lehulu.com/lehulu.js"&gt;&lt;/script&gt;
+            <section class="card featured" aria-labelledby="s-feat">
+              <div class="feat-head">
+                <h2 id="s-feat">Inside ALX Savanna</h2>
+                <a href="savanna/pages/homepage-v1-paced.html">Savanna home</a>
+              </div>
+              <div class="feat-body">
+                <div>
+                  <p class="huge">1 line</p>
+                  <p class="feat-title">One script tag adds it</p>
+                  <p class="note">Sign-up, jobs, profile, partner and employer screens, in Savanna's own layout and colours.</p>
+                  <a class="button dark" href="savanna/pages/lehulu-signup.html">Open sign-up</a>
+                </div>
+                <img src="img/savanna-signup.jpg" alt="The Lehulu sign-up inside the Savanna dashboard, with Savanna's header and sidebar" width="1000" height="640" />
+              </div>
+            </section>
+
+            <section class="card stat" id="c-lang" aria-labelledby="s-lang">
+              <h2 id="s-lang">Languages</h2>
+              <p class="big">2</p>
+              <p class="note">Amharic and English, with the Ethiopian calendar</p>
+            </section>
+
+            <section class="card stat" id="c-size" aria-labelledby="s-size">
+              <h2 id="s-size">First visit</h2>
+              <p class="big">110 KB</p>
+              <p class="note">On a slow connection, then it works offline</p>
+            </section>
+
+            <section class="card stat" id="c-cost" aria-labelledby="s-cost">
+              <h2 id="s-cost">Running cost</h2>
+              <p class="big">US$5–7</p>
+              <p class="note">A month for 3,000 learners, plus SMS fees</p>
+            </section>
+
+          </div>
+
+          <div class="lower">
+            <section class="card how" id="how" aria-labelledby="how-h">
+              <h2 id="how-h">How it works</h2>
+              <ol>
+                <li><strong>Say how you use your phone</strong><span>Six ways, any mix. Nothing about diagnosis.</span></li>
+                <li><strong>Answer one question at a time</strong><span>Type, speak, or tap a picture. Each question can be played aloud.</span></li>
+                <li><strong>No ID? A partner confirms</strong><span>AAAPD confirms who you are, and learning starts the same day.</span></li>
+                <li><strong>Apply for jobs</strong><span>Jobs with your support come first. You decide what the employer sees.</span></li>
+                <li><strong>Change, download or delete</strong><span>Sign in on any phone with a code sent by SMS.</span></li>
+              </ol>
+            </section>
+
+            <section class="card accounts" id="accounts" aria-labelledby="acc-h">
+              <div class="feat-head">
+                <h2 id="acc-h">Test accounts</h2>
+                <span class="tag">Test system</span>
+              </div>
+              <div class="table-wrap" tabindex="0" role="region" aria-labelledby="acc-h">
+                <table>
+                  <thead>
+                    <tr><th scope="col">Who</th><th scope="col">Sign in with</th><th scope="col">What you will see</th><th scope="col">Status</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row"><a href="savanna/pages/lehulu-signup.html">New learner</a></th>
+                      <td>Any phone number, for example <span class="mono">0911 234 567</span></td>
+                      <td>The ten sign-up questions</td>
+                      <td><span class="status ok">Open</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><a href="savanna/pages/lehulu-profile.html">Hanna Tesfaye</a></th>
+                      <td>Phone <span class="mono">0911 000 001</span>, code <span class="mono">123456</span></td>
+                      <td>Her profile and ID status</td>
+                      <td><span class="status wait">Waiting for AAAPD</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><a href="savanna/pages/lehulu-jobs.html">Dawit Bekele</a></th>
+                      <td>Phone <span class="mono">0911 000 002</span>, code <span class="mono">123456</span></td>
+                      <td>Jobs, and his application</td>
+                      <td><span class="status info">Applied</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><a href="savanna/pages/lehulu-partner.html">Partner: AAAPD</a></th>
+                      <td>ID <span class="mono">aaapd</span>, password <span class="mono">aaapd-demo</span></td>
+                      <td>Hanna, waiting to be confirmed</td>
+                      <td><span class="status wait">1 waiting</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><a href="savanna/pages/lehulu-employer.html">Employer: Lideta Tech</a></th>
+                      <td>ID <span class="mono">lideta-tech</span>, password <span class="mono">lideta-tech-demo</span></td>
+                      <td>Dawit's application and support needs</td>
+                      <td><span class="status ok">1 application</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <ol class="order" aria-label="Suggested order">
+                <li><a href="savanna/pages/lehulu-signup.html">Sign up as a new learner</a></li>
+                <li><a href="savanna/pages/lehulu-profile.html">Sign in as Hanna</a></li>
+                <li><a href="savanna/pages/lehulu-partner.html">Confirm Hanna as AAAPD</a></li>
+                <li><a href="savanna/pages/lehulu-employer.html">Read Dawit's application</a></li>
+              </ol>
+              <p class="note">On this test system, SMS codes are shown on screen and your data stays in your own browser.</p>
+            </section>
+
+            <section class="card ringcard" aria-labelledby="s-a11y">
+              <div>
+                <h2 id="s-a11y">Accessibility checks</h2>
+                <p class="big">0</p>
+                <p class="note">Serious axe issues on every screen, checked on every change</p>
+              </div>
+              <div class="ring" role="img" aria-label="All 6 screens tested with the keyboard only">
+                <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50" class="track"/><circle cx="60" cy="60" r="50" class="fill"/></svg>
+                <p><strong>6 of 6</strong><span>screens tested by keyboard only</span></p>
+              </div>
+            </section>
+          </div>
+
+          <section class="card install" id="install" aria-labelledby="install-h">
+            <h2 id="install-h">Add it to your platform</h2>
+            <div class="install-grid">
+              <div>
+                <p><strong>1.</strong> Load the script once, and place the sign-up where it should appear.</p>
+                <pre><code>&lt;script type="module" src="https://lehulu.com/lehulu.js"&gt;&lt;/script&gt;
 &lt;lehulu-signup lang="am" jobs-url="/jobs" profile-url="/profile"&gt;&lt;/lehulu-signup&gt;</code></pre>
-        <p>2. Listen for what the learner did. Your platform decides what happens next.</p>
-        <pre><code>document.addEventListener('lehulu:signup-complete', (e) =&gt; {
-  // e.detail: { learnerId, idStatus, linkToken }. Exchange linkToken on your server at POST /v1/link.
+                <p><strong>2.</strong> Listen for what the learner did. Your platform decides what happens next.</p>
+                <pre><code>document.addEventListener('lehulu:signup-complete', (e) =&gt; {
+  // e.detail: { learnerId, idStatus, linkToken }
 });
 document.addEventListener('lehulu:preferences', (e) =&gt; {
-  // Sent only if the learner agreed. e.detail: { language, accessPreferences }
+  // Only if the learner agreed: { language, accessPreferences }
 });</code></pre>
-        <p>3. The other screens work the same way: <code>&lt;lehulu-profile&gt;</code>, <code>&lt;lehulu-jobs&gt;</code>,
-          <code>&lt;lehulu-partner&gt;</code>, <code>&lt;lehulu-employer&gt;</code>. Sites that block scripts can use
-          an iframe (<code>/embed/?flow=signup&amp;lang=am</code>), and servers can use the
-          <a href="docs">REST API</a>. The <a href="blank.html">plain page example</a> shows the sign-up with no other
-          styles around it.</p>
-      </section>
-    </main>
+              </div>
+              <ul class="levels">
+                <li><span class="status info">Level 1</span><p>Web components: <code>&lt;lehulu-signup&gt;</code>, <code>&lt;lehulu-jobs&gt;</code>, <code>&lt;lehulu-profile&gt;</code>, <code>&lt;lehulu-partner&gt;</code>, <code>&lt;lehulu-employer&gt;</code>. An iframe for sites that block scripts.</p></li>
+                <li><span class="status ok">Level 2</span><p>A REST API with OpenAPI documentation, a signed webhook, and account linking for the host.</p></li>
+                <li><span class="status wait">Level 3</span><p>schema.org JobPosting for every job. One Docker command, SQLite, no cloud services. The <a href="blank.html">plain page example</a> shows the sign-up with no styles around it.</p></li>
+              </ul>
+            </div>
+          </section>
+        </main>
+
+        <footer class="foot">
+          <p>Kaleab Girma, Melaku Abebe, Leulseged Bekele, Ezana Tegegne. Track 1, Digital Bridge Accessibility Hackathon 2026.</p>
+          <p>Photo: Simien Mountains, Ethiopia, by <a href="https://www.flickr.com/people/40595948@N00">A. Davey</a>, <a href="https://creativecommons.org/licenses/by/2.0/">CC BY 2.0</a>.</p>
+        </footer>
+      </div>
+    </div>
     <script type="module" src="/src/pages.ts"></script>
   </body>
 </html>

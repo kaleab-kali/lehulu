@@ -1,20 +1,19 @@
 import { css } from 'lit';
 
-// Hosts can theme the component with --lehulu-* custom properties, and force a theme with
-// theme="light" | theme="dark" (default: follow the device). Contrast ≥ 4.5:1 for text and ≥ 3:1 for
-// field borders and focus rings, in both themes (checked when the palette was chosen).
+// Hosts can theme the component with --lehulu-* custom properties. One light theme. Contrast ≥ 4.5:1 for
+// text and ≥ 3:1 for field borders and focus rings (checked when the palette was chosen).
 export const base = css`
   :host {
-    --accent: var(--lehulu-accent, #1d4ed8);
+    --accent: var(--lehulu-accent, #6d28d9);
     --accent-fg: var(--lehulu-accent-fg, #ffffff);
-    --accent-2: var(--lehulu-accent-2, #1d4ed8);
+    --accent-2: var(--lehulu-accent-2, #6d28d9);
     --bg: var(--lehulu-bg, #ffffff);
-    --raise: var(--lehulu-raise, #f3f5f9);
+    --raise: var(--lehulu-raise, #f6f3fc);
     --fg: var(--lehulu-fg, var(--bs-body-color, #111827));
     --muted: var(--lehulu-muted, #4b5563);
     --line: var(--lehulu-line, #7b8494); /* field borders: 3.7:1 on white */
     --hair: var(--lehulu-hair, #e5e7eb); /* card edges: decorative */
-    --soft: var(--lehulu-soft, #e8efff);
+    --soft: var(--lehulu-soft, #f1eafe);
     --ok: var(--lehulu-ok, #146c43);
     --ok-soft: var(--lehulu-ok-soft, #e3f5ea);
     --bad: var(--lehulu-bad, #b42318);
@@ -30,46 +29,6 @@ export const base = css`
   }
   /* Ge'ez script needs more room between lines. */
   :host(:lang(am)), [lang='am'] { line-height: 1.7; }
-  @media (prefers-color-scheme: dark) {
-    :host(:not([theme='light'])) {
-      --accent: var(--lehulu-accent, #93b4ff);
-      --accent-fg: var(--lehulu-accent-fg, #0b1530);
-      --accent-2: var(--lehulu-accent-2, #93b4ff);
-      --bg: var(--lehulu-bg, #161b26);
-      --raise: var(--lehulu-raise, #1d2433);
-      --fg: var(--lehulu-fg, #eef1f6);
-      --muted: var(--lehulu-muted, #aab3c2);
-      --line: var(--lehulu-line, #76829a);
-      --hair: var(--lehulu-hair, #2a3344);
-      --soft: var(--lehulu-soft, #1c2a4a);
-      --ok: var(--lehulu-ok, #7fd8a6);
-      --ok-soft: var(--lehulu-ok-soft, #18301f);
-      --bad: var(--lehulu-bad, #ff9b8f);
-      --bad-soft: var(--lehulu-bad-soft, #3a1d1b);
-      --focus: var(--lehulu-focus, #ffb547);
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.25);
-      color-scheme: dark;
-    }
-  }
-  :host([theme='dark']) {
-    --accent: var(--lehulu-accent, #93b4ff);
-    --accent-fg: var(--lehulu-accent-fg, #0b1530);
-    --accent-2: var(--lehulu-accent-2, #93b4ff);
-    --bg: var(--lehulu-bg, #161b26);
-    --raise: var(--lehulu-raise, #1d2433);
-    --fg: var(--lehulu-fg, #eef1f6);
-    --muted: var(--lehulu-muted, #aab3c2);
-    --line: var(--lehulu-line, #76829a);
-    --hair: var(--lehulu-hair, #2a3344);
-    --soft: var(--lehulu-soft, #1c2a4a);
-    --ok: var(--lehulu-ok, #7fd8a6);
-    --ok-soft: var(--lehulu-ok-soft, #18301f);
-    --bad: var(--lehulu-bad, #ff9b8f);
-    --bad-soft: var(--lehulu-bad-soft, #3a1d1b);
-    --focus: var(--lehulu-focus, #ffb547);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.25);
-    color-scheme: dark;
-  }
   * { box-sizing: border-box; }
 
   /* ---- surfaces ---- */

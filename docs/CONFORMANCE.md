@@ -68,7 +68,7 @@ Status key: **S** Supports · **PS** Partially supports · **DNS** Does not supp
 | 1.3.5 | Identify Input Purpose | AA | TO TEST | `autocomplete="name"`, `tel`, `bday-day` / `bday-month` / `bday-year` _[check]_, `one-time-code` on partner/learner code. |
 | 1.4.1 | Use of Color | A | TO TEST | Errors use text and an icon, not red alone. Selected choices have a border and a checked state, not colour alone. |
 | 1.4.2 | Audio Control | A | TO TEST | No audio plays automatically _[if a voice-only mode auto-plays, it has a stop/pause control and plays under 3 s or on request]_. |
-| 1.4.3 | Contrast (Minimum) | AA | TO TEST | Body text ≥ 4.5:1 and large text ≥ 3:1 in light and dark themes. _[Record the lowest measured ratio.]_ |
+| 1.4.3 | Contrast (Minimum) | AA | TO TEST | Body text ≥ 4.5:1 and large text ≥ 3:1 (one light theme). _[Record the lowest measured ratio.]_ |
 | 1.4.4 | Resize Text | AA | TO TEST | 200% browser zoom: no loss of content or function. |
 | 1.4.5 | Images of Text | AA | TO TEST | No images of text. Amharic is real text in Noto Sans Ethiopic. |
 | 1.4.10 | Reflow | AA | TO TEST | 320 CSS px width (400% zoom): one column, no horizontal scrolling. Date dropdowns wrap. |
