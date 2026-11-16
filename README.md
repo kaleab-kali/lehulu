@@ -3,7 +3,25 @@
 Track 1, Accessible onboarding · Digital Bridge Accessibility Hackathon 2026.
 Team: Kaleab Girma, Melaku Abebe, Leulseged Bekele, Ezana Tegegne · Co-designer: _add name_
 
+**Live test system: https://kaleab-kali.github.io/lehulu/**
+
 ![Lehulu front page](docs/screenshots/front-page.jpg)
+
+## Test accounts
+
+Every screen opens inside Savanna's own layout (header and sidebar). The live site is a test system: SMS codes are
+shown on screen, and each tester's data stays in their own browser. Docker Compose has the same accounts.
+
+| Who | Page | Sign in with | What you will see |
+|---|---|---|---|
+| New learner | `/savanna/pages/lehulu-signup.html` | Nothing; any phone number, for example `0911 234 567` | The sign-up questions |
+| Hanna Tesfaye, returning learner | `/savanna/pages/lehulu-profile.html` | Phone `0911 000 001`, code `123456` | Her profile; no ID, waiting for AAAPD |
+| Dawit Bekele, applicant | `/savanna/pages/lehulu-jobs.html` | Phone `0911 000 002`, code `123456` | Jobs, and his application |
+| Partner: AAAPD | `/savanna/pages/lehulu-partner.html` | ID `aaapd`, password `aaapd-demo`, or **Continue as AAAPD** | Hanna, waiting to be confirmed |
+| Employer: Lideta Tech | `/savanna/pages/lehulu-employer.html` | ID `lideta-tech`, password `lideta-tech-demo`, or **Continue as Lideta Tech** | Dawit's application, with his support needs |
+
+The test learners are in [`server/seed/test-learners.json`](server/seed/test-learners.json). They exist only when
+`DEMO_MODE=true`, and only their phones get the fixed code; everyone else gets a random one.
 
 ## What it does
 
@@ -14,7 +32,18 @@ that answer, and (only if the learner agrees) lets the host platform adapt too.
 
 ## Screens
 
-**Inside Savanna.** The same script tag on all three ALX Savanna starter pages, in Savanna's colours:
+**Inside Savanna.** Each Lehulu screen in Savanna's header and sidebar, in Savanna's colours
+(made by `scripts/make-savanna-pages.py`):
+
+| Sign-up | Hanna's profile | Jobs |
+|---|---|---|
+| ![Sign-up inside Savanna](docs/screenshots/savanna-signup.jpg) | ![Hanna Tesfaye signed in, her profile inside Savanna](docs/screenshots/savanna-profile.jpg) | ![Jobs inside Savanna](docs/screenshots/savanna-jobs.jpg) |
+
+| Partner: AAAPD confirms Hanna | Employer: Lideta Tech reads Dawit's application |
+|---|---|
+| ![Partner screen inside Savanna](docs/screenshots/savanna-partner.jpg) | ![Employer screen inside Savanna](docs/screenshots/savanna-employer.jpg) |
+
+The same script tag on all three ALX Savanna starter pages:
 
 | Learner dashboard (paced) | Learner dashboard (self-paced) | Lesson page |
 |---|---|---|
@@ -30,7 +59,7 @@ that answer, and (only if the learner agrees) lets the host platform adapt too.
 |---|---|---|
 | ![Review with a Change button on every answer](docs/screenshots/signup-review.jpg) | ![Account ready, ID waiting for the partner, the site adapts](docs/screenshots/signup-done.jpg) | ![Amharic name question with a large voice button](docs/screenshots/phone-amharic-voice.jpg) |
 
-**Jobs, partner and employer:**
+**Jobs, partner and employer** (Lehulu's own plain pages):
 
 | Jobs and my profile | Application sent | Partner sign-in |
 |---|---|---|
@@ -87,6 +116,7 @@ four settings that turn this off.
 | http://localhost:8080/blank.html | The sign-up alone on a page with no other styles |
 | http://localhost:8080/docs | API documentation |
 | http://localhost:8080/savanna/pages/homepage-v1-paced.html | Inside the real Savanna dashboard |
+| http://localhost:8080/savanna/pages/lehulu-signup.html | Sign-up, jobs, profile, partner and employer in Savanna's layout (`lehulu-*.html`) |
 
 ## Testing with the co-designer
 
@@ -113,7 +143,7 @@ The API is the server `lehulu.js` was loaded from. To use another server add `ap
 
 | Element | What it is | Attributes |
 |---|---|---|
-| `<lehulu-signup>` | Sign-up; also the apply and post-a-job flows | `flow` (`signup` · `apply` · `employer`), `lang` (`am` · `en`), `job-id` (apply), `jobs-url`, `profile-url`, `theme` (`light` · `dark`), `api`, `focus-on-load` |
+| `<lehulu-signup>` | Sign-up; also the apply and post-a-job flows | `flow` (`signup` · `apply` · `employer`), `lang` (`am` · `en`), `job-id` (apply), `jobs-url`, `profile-url`, `api`, `focus-on-load` |
 | `<lehulu-profile>` | Sign in by SMS code; see, change, download, delete | `lang`, `signup-url`, `api` |
 | `<lehulu-jobs>` | Jobs with the private support filter, and apply | `lang`, `signup-url`, `profile-url`, `api` |
 | `<lehulu-partner>` | Partner sign-in, confirm learners, register a learner | `lang`, `api` |
@@ -293,9 +323,12 @@ Server environment variables (see [`.env.example`](.env.example)):
 Server commands: `lehulu serve` (default) · `seed` · `create-client partner|employer <id> [name]` ·
 `backup <file>` · `openapi [file]` · `healthcheck`.
 
-Recorded question prompts and sign clips: put them in `web/public/audio/<lang>/<step>.opus` and
-`web/public/sign/<step>.webm` and list the step ids in `web/public/media.json` (see `docs/RECORDING.md`).
-Until then **Play question** uses the phone's own voice where one exists for the language, and is hidden otherwise.
+**Question audio.** Every question has an audio file in Amharic and English, so **Play question** works on phones
+with no Amharic voice: `web/public/audio/<lang>/<flow>/<step>.mp3` (mono, 24 kbit/s, 1.3 MB in all, loaded only
+when played), listed in `web/public/media.json`. `python scripts/make-audio.py` makes them with Microsoft's neural
+voices (`pip install edge-tts`); replace any file with a person's recording of the same name. Sign clips go in
+`web/public/sign/<step>.webm` (see `docs/RECORDING.md`); until they exist, the sign-language way shows a picture for
+each question and picture choices.
 
 ## Development and tests
 
@@ -325,17 +358,17 @@ page.
 web/      components (src/components), flow engine (src/engine), data layer (src/data/store.ts), tests
 server/   Rust API: routes, auth, domain rules, migrations, seed data
 flows/    signup.json, apply.json, employer.json, needs.json (shared by web and server)
-scripts/  import-savanna-starter.sh
+scripts/  import-savanna-starter.sh, make-savanna-pages.py, make-audio.py
 docs/     ARCHITECTURE.md, FEATURES.md, CONFORMANCE.md, RECORDING.md
 ```
 
 ## Finished and not finished
 
-**Finished:** everything in the walkthrough above, with automated tests (26 Rust, 8 unit, and 10 end-to-end journeys each
+**Finished:** everything in the walkthrough above, with automated tests (27 Rust, 8 unit, and 12 end-to-end journeys each
 run on a desktop and a phone viewport, in demo mode and against the server). Status per feature: [docs/FEATURES.md](docs/FEATURES.md).
 
 **Not finished:**
-- Recorded Amharic question prompts and Ethiopian Sign Language clips (people must record them).
+- Question audio recorded by people (the current files are neural voices) and Ethiopian Sign Language clips.
 - A final read of the Amharic by a native speaker on the team or the co-designer.
 - The conformance report needs the co-designer's TalkBack and NVDA sessions ([docs/CONFORMANCE.md](docs/CONFORMANCE.md)).
 - A real SMS gateway adapter (the simulator is built; production needs a provider's API key).
@@ -346,7 +379,10 @@ run on a desktop and a phone viewport, in demo mode and against the server). Sta
 
 Web: lit (BSD-3-Clause), @fontsource/noto-sans-ethiopic (OFL-1.1), icons in the style of Lucide (ISC) and the
 sign-language icon from Tabler Icons (MIT). The `web/public/savanna/` pages are ALX's Savanna starter, unchanged
-except for the Lehulu script tag. Build and test only: Vite, Vitest (MIT),
+except for the Lehulu script tag and a Lehulu group in the sidebar; the `lehulu-*.html` pages reuse its header and
+sidebar. Front page photo: Simien Mountains, Ethiopia, by [A. Davey](https://www.flickr.com/people/40595948@N00),
+[CC BY 2.0](https://creativecommons.org/licenses/by/2.0/), via Wikimedia Commons. Question audio made with
+edge-tts (build-time only, not shipped). Build and test only: Vite, Vitest (MIT),
 TypeScript, Playwright (Apache-2.0), @axe-core/playwright (MPL-2.0).
 Server: axum, tokio, tower, tower-http, hyper, tracing (MIT); sqlx, serde, serde_json, utoipa, utoipa-swagger-ui
 (Swagger UI is Apache-2.0), chrono, uuid, rand, sha2, hmac, aes-gcm, hex, reqwest, rustls, thiserror (MIT or
