@@ -476,14 +476,14 @@ export class LehuluSignup extends LitElement {
   }
 
   private hasPrompt(s: Step) {
-    return this._media.audio[this._lang].includes(s.id);
+    return this._media.audio[this._lang].includes(`${this.flow}/${s.id}`);
   }
 
-  /** The human recording if there is one, otherwise the phone's own voice (never both). */
+  /** The recorded question if there is one (web/public/audio), otherwise the phone's own voice. */
   private play(s: Step) {
     this.stopPlaying();
     if (this.hasPrompt(s)) {
-      const audio = new Audio(`${assetsBase()}audio/${this._lang}/${s.id}.opus`);
+      const audio = new Audio(`${assetsBase()}audio/${this._lang}/${this.flow}/${s.id}.mp3`);
       this.player = audio;
       audio.play().catch(() => {
         if (!this.speakStep(s)) this._status = this.t.playFailed;

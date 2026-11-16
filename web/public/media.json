@@ -1,5 +1,48 @@
 {
-  "about": "Recorded question prompts and sign clips that exist. After recording public/audio/<lang>/<step>.opus or public/sign/<step>.webm, add the step id here so the Play / Sign buttons appear.",
-  "audio": { "en": [], "am": [] },
+  "about": "Question audio and sign clips that exist. Audio: web/public/audio/<lang>/<flow>/<step>.mp3, made by scripts/make-audio.py or recorded by a person. Sign clips: web/public/sign/<step>.webm.",
+  "audio": {
+    "en": [
+      "signup/language",
+      "signup/ways",
+      "signup/name",
+      "signup/phone",
+      "signup/dob",
+      "signup/idType",
+      "signup/idNumber",
+      "signup/partner",
+      "signup/supportNeeds",
+      "signup/shareWithHost",
+      "signup/review",
+      "apply/why",
+      "apply/shareSupport",
+      "apply/review",
+      "employer/title",
+      "employer/org",
+      "employer/city",
+      "employer/supportOffered",
+      "employer/review"
+    ],
+    "am": [
+      "signup/language",
+      "signup/ways",
+      "signup/name",
+      "signup/phone",
+      "signup/dob",
+      "signup/idType",
+      "signup/idNumber",
+      "signup/partner",
+      "signup/supportNeeds",
+      "signup/shareWithHost",
+      "signup/review",
+      "apply/why",
+      "apply/shareSupport",
+      "apply/review",
+      "employer/title",
+      "employer/org",
+      "employer/city",
+      "employer/supportOffered",
+      "employer/review"
+    ]
+  },
   "sign": []
 }
